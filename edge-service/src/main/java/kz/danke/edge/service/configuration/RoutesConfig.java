@@ -19,7 +19,7 @@ public class RoutesConfig {
                 .routes()
                 .route(
                         "clothes-get",
-                        getClothPredicate -> getClothPredicate
+                        getClothFindAllPredicate -> getClothFindAllPredicate
                                 .method(HttpMethod.GET)
                                 .and()
                                 .path("/clothes")
@@ -28,7 +28,7 @@ public class RoutesConfig {
                 )
                 .route(
                         "clothes-post",
-                        getClothPostPredicate -> getClothPostPredicate
+                        getClothSaveNewPredicate -> getClothSaveNewPredicate
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/clothes")
