@@ -1,2 +1,3 @@
 # kids.shop.project
-Microservice project using ELK, Apache Kafka, Reactive
+
+Kids Shop project using Apache Kafka, RabbitMQ, Docker, Spring Cloud
