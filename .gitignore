@@ -1,0 +1,11 @@
+cloth.service/target/**
+
+cloth.service/.idea/
+
+cloth.service/*.iml
+
+service_compose/rabbitmq/data/**
+service_compose/rabbitmq/logs/**
+service_compose/rabbitmq/etc/**
+
+.idea
