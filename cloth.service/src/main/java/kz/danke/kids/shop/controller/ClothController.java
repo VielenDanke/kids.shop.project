@@ -9,21 +9,32 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/api/v1/clothes")
 public class ClothController {
 
     private final ClothService clothService;
+    private final Environment environment;
 
     @Autowired
-    public ClothController(ClothService clothService) {
+    public ClothController(ClothService clothService,
+                           Environment environment) {
         this.clothService = clothService;
+        this.environment = environment;
     }
 
     @GetMapping
-    public Flux<Cloth> findAllClothes(@RequestParam(name = "amount", required = false) final Integer amountOfCloth) {
-        return amountOfCloth == null ? clothService.findAll() : clothService.findAll()
-                .take(amountOfCloth);
+    public Flux<String> findAllClothes() {
+        return clothService.findAll()
+                .flatMap(cloth -> {
+                    Mono<String> clothDescription = Mono.just(cloth.getDescription());
+                    Mono<String> serverPort = Mono.just(Objects.requireNonNull(environment.getProperty("server.port")));
+
+                    return clothDescription.zipWith(serverPort, (clothDes, sPort) ->
+                            String.format("Description is %s and port is %s", clothDes, serverPort));
+                });
     }
 
     @PostMapping
