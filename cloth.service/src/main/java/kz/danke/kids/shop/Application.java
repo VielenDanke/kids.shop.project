@@ -19,32 +19,32 @@ import java.util.UUID;
 @EnableConfigurationProperties(value = {AppConfigProperties.class})
 public class Application {
 
-	private final ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository;
+    private final ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository;
 
-	@Autowired
-	public Application(ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository) {
-		this.clothReactiveElasticsearchRepository = clothReactiveElasticsearchRepository;
-	}
+    @Autowired
+    public Application(ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository) {
+        this.clothReactiveElasticsearchRepository = clothReactiveElasticsearchRepository;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
 
-	@Bean
-	public CommandLineRunner commandLineRunner() {
-		return args -> {
-			clothReactiveElasticsearchRepository
-					.deleteAll()
-					.block();
+    @Bean
+    public CommandLineRunner commandLineRunner() {
+        return args -> {
+            clothReactiveElasticsearchRepository
+                    .deleteAll()
+                    .block();
 
-			Cloth first = new Cloth(UUID.randomUUID().toString(), "first");
-			Cloth second = new Cloth(UUID.randomUUID().toString(), "second");
-			Cloth third = new Cloth(UUID.randomUUID().toString(), "third");
-			Cloth fourth = new Cloth(UUID.randomUUID().toString(), "fourth");
+            Cloth first = Cloth.builder().id(UUID.randomUUID().toString()).description("first").build();
+            Cloth second = Cloth.builder().id(UUID.randomUUID().toString()).description("second").build();
+            Cloth third = Cloth.builder().id(UUID.randomUUID().toString()).description("third").build();
+            Cloth fourth = Cloth.builder().id(UUID.randomUUID().toString()).description("fourth").build();
 
-			clothReactiveElasticsearchRepository
-					.saveAll(Arrays.asList(first, second, third, fourth))
-					.blockLast();
-		};
-	}
+            clothReactiveElasticsearchRepository
+                    .saveAll(Arrays.asList(first, second, third, fourth))
+                    .blockLast();
+        };
+    }
 }

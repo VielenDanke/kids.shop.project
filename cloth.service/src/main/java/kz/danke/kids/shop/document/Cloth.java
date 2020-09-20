@@ -18,7 +18,7 @@ public class Cloth {
     public Cloth() {
     }
 
-    public Cloth(String id, String description) {
+    private Cloth(String id, String description) {
         this.id = id;
         this.description = description;
     }
