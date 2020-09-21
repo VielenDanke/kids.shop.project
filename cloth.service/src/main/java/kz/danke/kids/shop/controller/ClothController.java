@@ -5,6 +5,7 @@ import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.service.ClothService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,7 +26,9 @@ public class ClothController {
         this.environment = environment;
     }
 
-    @GetMapping
+    @GetMapping(
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
     public Flux<String> findAllClothes() {
         return clothService.findAll()
                 .flatMap(cloth -> {
@@ -37,7 +40,10 @@ public class ClothController {
                 });
     }
 
-    @PostMapping
+    @PostMapping(
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
     public Mono<Cloth> save(@RequestBody ClothSaveRequest clothSaveRequest) {
         return clothService.save(clothSaveRequest);
     }
