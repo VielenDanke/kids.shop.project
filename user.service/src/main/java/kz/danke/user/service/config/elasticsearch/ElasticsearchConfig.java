@@ -1,5 +1,6 @@
-package kz.danke.kids.shop.config;
+package kz.danke.user.service.config.elasticsearch;
 
+import kz.danke.user.service.config.AppConfigProperties;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +22,7 @@ import java.security.cert.CertificateException;
 import java.util.Objects;
 
 @Configuration
-@EnableReactiveElasticsearchRepositories
+@EnableReactiveElasticsearchRepositories(basePackages = {"kz.danke.user.service.repository"})
 public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfiguration {
 
     private final AppConfigProperties appConfigProperties;
@@ -58,7 +59,7 @@ public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfigurat
             return SSLContextBuilder
                     .create()
                     .loadTrustMaterial(new File(
-                            appConfigProperties.getElasticsearch().getJksStorePath()),
+                                    appConfigProperties.getElasticsearch().getJksStorePath()),
                             appConfigProperties.getElasticsearch().getJksPassword().toCharArray()
                     )
                     .build();

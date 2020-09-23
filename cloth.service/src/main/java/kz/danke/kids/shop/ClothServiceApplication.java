@@ -17,17 +17,17 @@ import java.util.UUID;
 @SpringBootApplication
 @EnableEurekaClient
 @EnableConfigurationProperties(value = {AppConfigProperties.class})
-public class Application {
+public class ClothServiceApplication {
 
     private final ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository;
 
     @Autowired
-    public Application(ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository) {
+    public ClothServiceApplication(ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository) {
         this.clothReactiveElasticsearchRepository = clothReactiveElasticsearchRepository;
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(ClothServiceApplication.class, args);
     }
 
     @Bean

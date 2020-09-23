@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>kz.danke</groupId>
-	<artifactId>cloth.service</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
-	<name>cloth.service</name>
-	<description>Demo project for Elastic Reactive</description>
+	<artifactId>user.service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>user.service</name>
+	<description>User Service Cloth Shop</description>
 
 	<properties>
 		<java.version>11</java.version>
@@ -20,6 +20,10 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
@@ -81,6 +85,11 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
