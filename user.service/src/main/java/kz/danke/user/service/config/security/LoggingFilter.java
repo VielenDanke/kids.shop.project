@@ -1,9 +1,19 @@
 package kz.danke.user.service.config.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
+import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.stereotype.Component;
@@ -12,34 +22,72 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import javax.naming.AuthenticationException;
-
 @Component
 @Slf4j
 public class LoggingFilter implements WebFilter {
 
+    private final ReactiveAuthenticationManager reactiveAuthenticationManager;
+    private final Environment environment;
+
+    private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
     private ServerAuthenticationConverter authenticationConverter = new UserLoginFormAuthenticationConverter();
-    private ReactiveAuthenticationManager reactiveAuthenticationManager;
+    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/auth/login");
+    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler();
+    private ServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler("/login");
+
+    @Autowired
+    public LoggingFilter(ReactiveAuthenticationManager reactiveAuthenticationManager,
+                         Environment environment) {
+        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
+        this.environment = environment;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
-        return ServerWebExchangeMatchers.pathMatchers("/login")
-                .matches(serverWebExchange)
+        log.info("Filter is happened");
+        return this.serverWebExchangeMatcher.matches(serverWebExchange)
                 .filter(ServerWebExchangeMatcher.MatchResult::isMatch)
                 .flatMap(matchResult -> this.authenticationConverter.convert(serverWebExchange))
                 .switchIfEmpty(webFilterChain.filter(serverWebExchange).then(Mono.empty()))
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
-                .onErrorResume(AuthenticationException.class, (e) -> {
-                    log.error(e.getLocalizedMessage());
-                    return Mono.error(e);
-                });
+                .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                        new WebFilterExchange(serverWebExchange, webFilterChain), e
+                ));
     }
 
     private Mono<Void> authenticate(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain, Authentication authentication) {
-        return webFilterChain.filter(serverWebExchange);
+        return this.reactiveAuthenticationManager.authenticate(authentication)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new IllegalStateException("No provider found for " + authentication.getClass()))))
+                .flatMap(auth -> onAuthenticationSuccess(auth, new WebFilterExchange(serverWebExchange, webFilterChain)));
     }
 
-    public void setReactiveAuthenticationManager(ReactiveAuthenticationManager reactiveAuthenticationManager) {
-        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
+    private Mono<Void> onAuthenticationSuccess(Authentication authentication, WebFilterExchange webFilterExchange) {
+        ServerWebExchange exchange = webFilterExchange.getExchange();
+        SecurityContextImpl securityContext = new SecurityContextImpl();
+        securityContext.setAuthentication(authentication);
+        return this.securityContextRepository.save(exchange, securityContext)
+                .then(this.authenticationSuccessHandler
+                        .onAuthenticationSuccess(webFilterExchange, authentication))
+                .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+    }
+
+    public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {
+        this.authenticationConverter = authenticationConverter;
+    }
+
+    public void setServerWebExchangeMatcher(ServerWebExchangeMatcher serverWebExchangeMatcher) {
+        this.serverWebExchangeMatcher = serverWebExchangeMatcher;
+    }
+
+    public void setSecurityContextRepository(ServerSecurityContextRepository securityContextRepository) {
+        this.securityContextRepository = securityContextRepository;
+    }
+
+    public void setAuthenticationSuccessHandler(ServerAuthenticationSuccessHandler authenticationSuccessHandler) {
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+    }
+
+    public void setAuthenticationFailureHandler(ServerAuthenticationFailureHandler authenticationFailureHandler) {
+        this.authenticationFailureHandler = authenticationFailureHandler;
     }
 }

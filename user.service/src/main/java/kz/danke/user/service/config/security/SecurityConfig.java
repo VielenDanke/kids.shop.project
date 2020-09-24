@@ -6,15 +6,24 @@ import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.authentication.ServerFormLoginAuthenticationConverter;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
@@ -24,7 +33,7 @@ import java.net.URI;
 public class SecurityConfig {
 
     @Bean
-    public ReactiveAuthenticationManager reactiveAuthenticationManager(PasswordEncoder passwordEncoder,
+    public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(PasswordEncoder passwordEncoder,
                                                                        ReactiveUserDetailsServiceImpl reactiveUserDetailsService) {
         UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
                 new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService);
@@ -36,8 +45,16 @@ public class SecurityConfig {
     }
 
     @Bean
+    public ReactiveAuthenticationManagerResolver<ServerWebExchange> authenticationManagerResolver(
+            ReactiveAuthenticationManager reactiveAuthenticationManager
+    ) {
+        return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
+    }
+
+    @Bean
     public SecurityWebFilterChain securityWebFilterChain(
-            ServerHttpSecurity httpSecurity
+            ServerHttpSecurity httpSecurity,
+            LoggingFilter loggingFilter
     ) {
         httpSecurity
                 .csrf()
@@ -47,15 +64,19 @@ public class SecurityConfig {
                 .permitAll()
                 .pathMatchers(HttpMethod.POST, "/auth/registration")
                 .permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/login")
+                .permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
                 .httpBasic()
-                .and()
+                .disable()
                 .formLogin()
-                .and()
+                .disable()
                 .logout()
-                .logoutSuccessHandler(logoutSuccessHandler());
+                .logoutSuccessHandler(logoutSuccessHandler())
+                .and()
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.HTTP_BASIC);
 
         return httpSecurity.build();
     }

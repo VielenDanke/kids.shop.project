@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.ReactiveAuthenticationManagerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.tools.agent.ReactorDebugAgent;
@@ -33,6 +34,8 @@ public class UserServiceApplication {
 	@Bean
 	public CommandLineRunner lineRunner() {
 		return args -> {
+			reactiveUserRepository.deleteAll().block();
+
 			User user = User.builder()
 					.id(UUID.randomUUID().toString())
 					.username("first")
