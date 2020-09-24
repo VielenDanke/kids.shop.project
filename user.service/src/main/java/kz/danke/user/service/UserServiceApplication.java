@@ -9,7 +9,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.ReactiveAuthenticationManagerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.tools.agent.ReactorDebugAgent;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -38,11 +40,14 @@ public class UserServiceApplication {
 					.authorities(Collections.singleton("ROLE_USER"))
 					.build();
 
-			reactiveUserRepository.save(user).block();
+			User block = reactiveUserRepository.save(user).block();
+
+			System.out.println(block.getId());
 		};
 	}
 
 	public static void main(String[] args) {
+//		ReactorDebugAgent.init();
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 

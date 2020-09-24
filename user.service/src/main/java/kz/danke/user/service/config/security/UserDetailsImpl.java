@@ -27,7 +27,6 @@ public class UserDetailsImpl implements UserDetails {
     public static UserDetailsImpl buildUserDetails(User user) {
         Set<SimpleGrantedAuthority> roles = user.getAuthorities()
                 .stream()
-                .filter(UserDetailsImpl::validateRole)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
 
@@ -78,6 +77,22 @@ public class UserDetailsImpl implements UserDetails {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setAuthorities(Set<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
     private static boolean validateRole(String role) {
         Authorities[] values = Authorities.values();
 
@@ -87,5 +102,15 @@ public class UserDetailsImpl implements UserDetails {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "UserDetailsImpl{" +
+                "id='" + id + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", authorities=" + authorities +
+                '}';
     }
 }
