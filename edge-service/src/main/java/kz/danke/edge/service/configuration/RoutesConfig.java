@@ -32,8 +32,40 @@ public class RoutesConfig {
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/clothes")
-                                .filters(clothesPostFilter -> clothesPostFilter.rewritePath("/clothes", "/api/v1/clothes"))
+                                .filters(
+                                        clothesPostFilter ->
+                                                clothesPostFilter.rewritePath(
+                                                        "/clothes",
+                                                        "/api/v1/clothes"
+                                                )
+                                )
                                 .uri("lb://cloth-ms")
+                )
+                .route(
+                        "user-login",
+                        getUserLoginPredicate -> getUserLoginPredicate
+                        .method(HttpMethod.POST)
+                        .and()
+                        .path("/login")
+                        .filters(
+                                userLoginPostFilter ->
+                                        userLoginPostFilter.rewritePath(
+                                                "/login", "/auth/login")
+                        )
+                        .uri("lb://user-ms")
+                )
+                .route(
+                        "user-registration",
+                        getUserLoginPredicate -> getUserLoginPredicate
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/registration")
+                                .filters(
+                                        userLoginPostFilter ->
+                                                userLoginPostFilter.rewritePath(
+                                                        "/registration", "/auth/registration")
+                                )
+                                .uri("lb://user-ms")
                 )
                 .build();
     }

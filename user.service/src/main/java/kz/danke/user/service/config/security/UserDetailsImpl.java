@@ -27,6 +27,7 @@ public class UserDetailsImpl implements UserDetails {
     public static UserDetailsImpl buildUserDetails(User user) {
         Set<SimpleGrantedAuthority> roles = user.getAuthorities()
                 .stream()
+                .filter(UserDetailsImpl::validateRole)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
 
