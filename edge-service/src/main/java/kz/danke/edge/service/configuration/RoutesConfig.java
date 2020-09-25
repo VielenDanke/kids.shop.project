@@ -9,10 +9,6 @@ import org.springframework.http.HttpMethod;
 @Configuration
 public class RoutesConfig {
 
-    /*
-    Need to read about Routing in Reactor
-     */
-
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder
@@ -23,7 +19,8 @@ public class RoutesConfig {
                                 .method(HttpMethod.GET)
                                 .and()
                                 .path("/clothes")
-                                .filters(f -> f.rewritePath("/clothes", "/api/v1/clothes"))
+                                .filters(f -> f.rewritePath("/clothes",
+                                        "/api/v1/clothes"))
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -50,7 +47,8 @@ public class RoutesConfig {
                         .filters(
                                 userLoginPostFilter ->
                                         userLoginPostFilter.rewritePath(
-                                                "/login", "/auth/login")
+                                                "/login",
+                                                "/auth/login")
                         )
                         .uri("lb://user-ms")
                 )
@@ -63,9 +61,23 @@ public class RoutesConfig {
                                 .filters(
                                         userLoginPostFilter ->
                                                 userLoginPostFilter.rewritePath(
-                                                        "/registration", "/auth/registration")
+                                                        "/registration",
+                                                        "/auth/registration")
                                 )
                                 .uri("lb://user-ms")
+                )
+                .route(
+                        "user-oauth2-login",
+                        getUserOAuth2LoginPredicate -> getUserOAuth2LoginPredicate
+                        .path("/oauth2/login")
+                        .filters(
+                                userOAuth2Filter ->
+                                        userOAuth2Filter.rewritePath(
+                                                "/oauth2/login/(?<segment>/?.*)",
+                                                "/oauth2/authorization/$\\{segment}"
+                                        )
+                        )
+                        .uri("lb://user-ms")
                 )
                 .build();
     }

@@ -14,6 +14,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.oidc.web.server.logout.OidcClientInitiatedServerLogoutSuccessHandler;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
@@ -57,10 +58,11 @@ public class SecurityConfig {
                 .authorizeExchange()
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
-                .pathMatchers(HttpMethod.POST, "/auth/registration")
-                .permitAll()
-                .pathMatchers(HttpMethod.POST, "/auth/login")
-                .permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                .pathMatchers("/login/oauth2/code/*").permitAll()
+                .pathMatchers("/oauth2/authorization/*").permitAll()
+                .pathMatchers("/oauth2/user/registration").permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
@@ -68,6 +70,11 @@ public class SecurityConfig {
                 .disable()
                 .formLogin()
                 .disable()
+                .oauth2Login()
+                .and()
+//                .logout(logout -> logout.logoutSuccessHandler(
+//                        new OidcClientInitiatedServerLogoutSuccessHandler(reactiveClientRegistrationRepository)
+//                ));
                 .logout()
                 .logoutSuccessHandler(logoutSuccessHandler())
                 .and()
