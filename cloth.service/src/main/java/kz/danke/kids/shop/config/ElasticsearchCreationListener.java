@@ -2,6 +2,8 @@ package kz.danke.kids.shop.config;
 
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -100,7 +102,8 @@ public class ElasticsearchCreationListener implements ApplicationListener<Contex
                     log.info(String.format("Delete indices: %s", Arrays.toString(indicesArray)));
 
                     deleteIndexRequest.indices(indicesArray);
-                }).block();
+                })
+                .block();
         reactiveElasticsearchClient
                 .indices()
                 .createIndex(createIndexRequest -> {

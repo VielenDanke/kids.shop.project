@@ -47,6 +47,11 @@ public class SecurityConfig {
         return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
     }
 
+    /*
+    Post request on login with headers application/x-www-form-urlencoded
+
+    because getFormData method on ServerWebRequest can read only with this header
+     */
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity httpSecurity,
