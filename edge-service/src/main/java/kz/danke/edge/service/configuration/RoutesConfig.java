@@ -66,19 +66,6 @@ public class RoutesConfig {
                                 )
                                 .uri("lb://user-ms")
                 )
-                .route(
-                        "user-oauth2-login",
-                        getUserOAuth2LoginPredicate -> getUserOAuth2LoginPredicate
-                        .path("/oauth2/login")
-                        .filters(
-                                userOAuth2Filter ->
-                                        userOAuth2Filter.rewritePath(
-                                                "/oauth2/login/(?<segment>/?.*)",
-                                                "/oauth2/authorization/$\\{segment}"
-                                        )
-                        )
-                        .uri("lb://user-ms")
-                )
                 .build();
     }
 }

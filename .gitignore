@@ -9,3 +9,5 @@ service_compose/rabbitmq/logs/**
 service_compose/rabbitmq/etc/**
 
 .idea
+
+*.iml

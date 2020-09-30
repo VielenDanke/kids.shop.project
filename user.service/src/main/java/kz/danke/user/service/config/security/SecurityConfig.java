@@ -14,7 +14,6 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.oidc.web.server.logout.OidcClientInitiatedServerLogoutSuccessHandler;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
@@ -75,8 +74,6 @@ public class SecurityConfig {
                 .disable()
                 .formLogin()
                 .disable()
-                .oauth2Login()
-                .and()
 //                .logout(logout -> logout.logoutSuccessHandler(
 //                        new OidcClientInitiatedServerLogoutSuccessHandler(reactiveClientRegistrationRepository)
 //                ));
