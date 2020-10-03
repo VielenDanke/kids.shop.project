@@ -2,13 +2,14 @@ package kz.danke.user.service.config.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.security.authentication.DelegatingReactiveAuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.WebFilterExchange;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
@@ -16,31 +17,20 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Component
 @Slf4j
 public class LoggingFilter implements WebFilter {
 
-    private final ReactiveAuthenticationManager reactiveAuthenticationManager;
-    private final Environment environment;
-
+    private ReactiveAuthenticationManager reactiveAuthenticationManager = new DelegatingReactiveAuthenticationManager();
     private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
     private ServerAuthenticationConverter authenticationConverter = new UserLoginFormAuthenticationConverter();
     private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/auth/login");
-    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler();
+    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new RedirectServerAuthenticationSuccessHandler();
     private ServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler("/login");
-
-    @Autowired
-    public LoggingFilter(ReactiveAuthenticationManager reactiveAuthenticationManager,
-                         Environment environment) {
-        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
-        this.environment = environment;
-    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
@@ -89,5 +79,9 @@ public class LoggingFilter implements WebFilter {
 
     public void setAuthenticationFailureHandler(ServerAuthenticationFailureHandler authenticationFailureHandler) {
         this.authenticationFailureHandler = authenticationFailureHandler;
+    }
+
+    public void setReactiveAuthenticationManager(ReactiveAuthenticationManager reactiveAuthenticationManager) {
+        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
     }
 }

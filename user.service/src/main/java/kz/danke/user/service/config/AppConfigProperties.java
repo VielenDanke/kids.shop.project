@@ -8,6 +8,28 @@ import java.util.List;
 public class AppConfigProperties {
 
     private Elasticsearch elasticsearch = new Elasticsearch();
+    private Jwt jwt = new Jwt();
+
+    public static class Jwt {
+        private String secret;
+        private Long expiration;
+
+        public String getSecret() {
+            return secret;
+        }
+
+        public void setSecret(String secret) {
+            this.secret = secret;
+        }
+
+        public Long getExpiration() {
+            return expiration;
+        }
+
+        public void setExpiration(Long expiration) {
+            this.expiration = expiration;
+        }
+    }
 
     public static class Elasticsearch {
         private String hostAndPort;
@@ -55,6 +77,14 @@ public class AppConfigProperties {
         public void setHostAndPort(String hostAndPort) {
             this.hostAndPort = hostAndPort;
         }
+    }
+
+    public Jwt getJwt() {
+        return jwt;
+    }
+
+    public void setJwt(Jwt jwt) {
+        this.jwt = jwt;
     }
 
     public Elasticsearch getElasticsearch() {

@@ -17,6 +17,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<spring-cloud.version>Hoxton.SR8</spring-cloud.version>
+		<jjwt.version>0.11.2</jjwt.version>
 	</properties>
 
 	<dependencies>
@@ -60,6 +61,26 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
 		</dependency>
+
+		<!-- JWT -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

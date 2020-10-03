@@ -2,6 +2,7 @@ package kz.danke.user.service.config.security;
 
 import kz.danke.user.service.service.ReactiveUserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +55,8 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity httpSecurity,
-            LoggingFilter loggingFilter
+            LoggingFilter loggingFilter,
+            UserAuthorizationTokenFilter tokenFilter
     ) {
         httpSecurity
                 .csrf()
@@ -80,7 +82,8 @@ public class SecurityConfig {
                 .logout()
                 .logoutSuccessHandler(logoutSuccessHandler())
                 .and()
-                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.HTTP_BASIC);
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.HTTP_BASIC)
+                .addFilterAt(tokenFilter, SecurityWebFiltersOrder.AUTHORIZATION);
 
         return httpSecurity.build();
     }
@@ -90,6 +93,21 @@ public class SecurityConfig {
         RedirectServerLogoutSuccessHandler logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
         logoutSuccessHandler.setLogoutSuccessUrl(URI.create("/"));
         return logoutSuccessHandler;
+    }
+
+    @Bean
+    public LoggingFilter loggingFilter(
+            UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
+            @Qualifier("userJwtService") JwtService<String> jwtService
+    ) {
+        LoggingFilter loggingFilter = new LoggingFilter();
+
+        UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
+
+        loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        loggingFilter.setReactiveAuthenticationManager(reactiveAuthenticationManager);
+
+        return loggingFilter;
     }
 
     @Bean

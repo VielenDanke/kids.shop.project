@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -37,6 +38,7 @@ public class SecurityConfig {
                 .formLogin()
                 .disable()
                 .oauth2Login()
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authenticationSuccessHandler(successHandler);
 
         return httpSecurity.build();
