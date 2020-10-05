@@ -100,12 +100,11 @@ public class SecurityConfig {
             UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
             @Qualifier("userJwtService") JwtService<String> jwtService
     ) {
-        LoggingFilter loggingFilter = new LoggingFilter();
+        LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
 
         UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
 
         loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
-        loggingFilter.setReactiveAuthenticationManager(reactiveAuthenticationManager);
 
         return loggingFilter;
     }

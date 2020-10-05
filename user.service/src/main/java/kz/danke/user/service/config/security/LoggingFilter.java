@@ -1,8 +1,6 @@
 package kz.danke.user.service.config.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.DelegatingReactiveAuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -25,12 +23,17 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class LoggingFilter implements WebFilter {
 
-    private ReactiveAuthenticationManager reactiveAuthenticationManager = new DelegatingReactiveAuthenticationManager();
+    private final ReactiveAuthenticationManager reactiveAuthenticationManager;
+
     private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
     private ServerAuthenticationConverter authenticationConverter = new UserLoginFormAuthenticationConverter();
     private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/auth/login");
     private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new RedirectServerAuthenticationSuccessHandler();
     private ServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler("/login");
+
+    public LoggingFilter(ReactiveAuthenticationManager reactiveAuthenticationManager) {
+        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
@@ -79,9 +82,5 @@ public class LoggingFilter implements WebFilter {
 
     public void setAuthenticationFailureHandler(ServerAuthenticationFailureHandler authenticationFailureHandler) {
         this.authenticationFailureHandler = authenticationFailureHandler;
-    }
-
-    public void setReactiveAuthenticationManager(ReactiveAuthenticationManager reactiveAuthenticationManager) {
-        this.reactiveAuthenticationManager = reactiveAuthenticationManager;
     }
 }
