@@ -2,7 +2,6 @@ package kz.danke.kids.shop.config;
 
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -11,7 +10,6 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.Set;

@@ -1,5 +1,9 @@
 package kz.danke.kids.shop.exceptions;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -14,18 +18,35 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Order(-2)
+@Slf4j
 public class GlobalExceptionHandler extends WebFluxResponseStatusExceptionHandler {
+
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    public GlobalExceptionHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         ServerHttpResponseDecorator decorator = new ServerHttpResponseDecorator(exchange.getResponse());
+        ResponseFailed responseFailed = ResponseFailed.builder()
+                .description(ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Something went wrong")
+                .type(ex.toString())
+                .build();
+        DataBufferFactory dataBufferFactory = decorator.bufferFactory();
 
         decorator.getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         decorator.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-        DataBufferFactory dataBufferFactory = decorator.bufferFactory();
 
-        DataBuffer dataBuffer = dataBufferFactory.wrap("Something went wrong".getBytes());
-
-        return decorator.writeWith(Flux.just(dataBuffer));
+        try {
+            String responseFailedJson = objectMapper.writeValueAsString(responseFailed);
+            DataBuffer dataBuffer = dataBufferFactory.wrap(responseFailedJson.getBytes());
+            return decorator.writeWith(Flux.just(dataBuffer));
+        } catch (JsonProcessingException e) {
+            log.error("Failed to write response exception");
+        }
+        return decorator.setComplete();
     }
 }

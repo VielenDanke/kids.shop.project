@@ -1,7 +1,6 @@
 package kz.danke.user.service.service;
 
 import kz.danke.user.service.config.security.UserDetailsImpl;
-import kz.danke.user.service.document.User;
 import kz.danke.user.service.repository.ReactiveUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsPasswordService;

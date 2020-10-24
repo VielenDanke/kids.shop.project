@@ -9,10 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.ReactiveAuthenticationManagerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import reactor.tools.agent.ReactorDebugAgent;
 
 import java.util.Collections;
 import java.util.UUID;
