@@ -2,7 +2,7 @@ package kz.danke.kids.shop;
 
 import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepository;
+import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -10,8 +10,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
+import reactor.core.publisher.Flux;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 @SpringBootApplication
@@ -19,11 +19,11 @@ import java.util.UUID;
 @EnableConfigurationProperties(value = {AppConfigProperties.class})
 public class ClothServiceApplication {
 
-    private final ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository;
+    private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
 
     @Autowired
-    public ClothServiceApplication(ClothReactiveElasticsearchRepository clothReactiveElasticsearchRepository) {
-        this.clothReactiveElasticsearchRepository = clothReactiveElasticsearchRepository;
+    public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl) {
+        this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
     }
 
     public static void main(String[] args) {
@@ -33,17 +33,16 @@ public class ClothServiceApplication {
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-            clothReactiveElasticsearchRepository
+            clothReactiveElasticsearchRepositoryImpl
                     .deleteAll()
-                    .block();
-
-            Cloth first = Cloth.builder().id(UUID.randomUUID().toString()).description("first").build();
-            Cloth second = Cloth.builder().id(UUID.randomUUID().toString()).description("second").build();
-            Cloth third = Cloth.builder().id(UUID.randomUUID().toString()).description("third").build();
-            Cloth fourth = Cloth.builder().id(UUID.randomUUID().toString()).description("fourth").build();
-
-            clothReactiveElasticsearchRepository
-                    .saveAll(Arrays.asList(first, second, third, fourth))
+                    .thenMany(Flux.just(
+                            Cloth.builder().id(UUID.randomUUID().toString()).description("first").build(),
+                            Cloth.builder().id(UUID.randomUUID().toString()).description("second").build(),
+                            Cloth.builder().id(UUID.randomUUID().toString()).description("third").build(),
+                            Cloth.builder().id(UUID.randomUUID().toString()).description("fourth").build()
+                    ))
+                    .flatMap(clothReactiveElasticsearchRepositoryImpl::save)
+                    .doOnNext(cloth -> System.out.println(cloth.getId()))
                     .blockLast();
         };
     }

@@ -2,16 +2,18 @@ package kz.danke.kids.shop.config;
 
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,12 +24,14 @@ public class ElasticsearchCreationListener implements ApplicationListener<Contex
     private final AppConfigProperties appConfigProperties;
     private final Package[] packages = Package.getPackages();
     private final ReactiveElasticsearchClient reactiveElasticsearchClient;
+    private final MappingElasticsearchConverter mappingElasticsearchConverter;
 
     @Autowired
     public ElasticsearchCreationListener(AppConfigProperties appConfigProperties,
-                                         ReactiveElasticsearchClient reactiveElasticsearchClient) {
+                                         ReactiveElasticsearchClient reactiveElasticsearchClient, MappingElasticsearchConverter mappingElasticsearchConverter) {
         this.appConfigProperties = appConfigProperties;
         this.reactiveElasticsearchClient = reactiveElasticsearchClient;
+        this.mappingElasticsearchConverter = mappingElasticsearchConverter;
     }
 
     @Override
@@ -66,50 +70,48 @@ public class ElasticsearchCreationListener implements ApplicationListener<Contex
             case CREATE:
                 createIndices(indices);
                 break;
+            case UPDATE:
+                updateIndices(indices);
+                break;
             default:
                 throw new ElasticsearchIndexPolicyException("Not valid creation policy");
         }
     }
 
-    private void createIndices(final Set<String> indices) {
-        reactiveElasticsearchClient
-                .indices()
-                .createIndex(createIndexRequest -> {
-                    log.info(String.format("Create indices: %s", indices.toString()));
+    private void updateIndices(Set<String> indices) {
+        Flux.fromIterable(indices)
+                .filter(index -> reactiveElasticsearchClient.indices().existsIndex(getIndexRequest ->
+                        getIndexRequest.indices(index)).blockOptional().orElse(false))
+                .flatMap(index -> reactiveElasticsearchClient.indices().updateMapping(putMappingRequest ->
+                        putMappingRequest.indices(index)))
+                .blockLast();
+    }
 
-                    indices.forEach(createIndexRequest::index);
-                }).block();
+    private void createIndices(final Set<String> indices) {
+        Flux.fromIterable(indices)
+                .filter(index -> {
+                    Optional<Boolean> existOptional = reactiveElasticsearchClient.indices().existsIndex(getIndexRequest ->
+                            getIndexRequest.indices(index)).blockOptional();
+                    return existOptional.map(aBoolean -> !aBoolean).orElse(true);
+                })
+                .doOnNext(index -> log.info(String.format("Index is creating: %s", index)))
+                .flatMap(index -> reactiveElasticsearchClient.indices().createIndex(createIndexRequest ->
+                        createIndexRequest.index(index)))
+                .blockLast();
     }
 
     private void deleteIndices(final Set<String> indices) {
-        reactiveElasticsearchClient
-                .indices()
-                .deleteIndex(deleteIndexRequest -> {
-                    String[] indicesArray = indices.toArray(String[]::new);
-
-                    log.info(String.format("Delete indices: %s", Arrays.toString(indicesArray)));
-
-                    deleteIndexRequest.indices(indicesArray);
-                }).block();
+        Flux.fromIterable(indices)
+                .filter(index -> reactiveElasticsearchClient.indices().existsIndex(getIndexRequest ->
+                        getIndexRequest.indices(index)).blockOptional().orElse(false))
+                .doOnNext(index -> log.info(String.format("Index is deleting: %s", index)))
+                .flatMap(index -> reactiveElasticsearchClient.indices().deleteIndex(deleteIndexRequest ->
+                        deleteIndexRequest.indices(index)))
+                .blockLast();
     }
 
     private void deleteAndCreateIndices(final Set<String> indices) {
-        reactiveElasticsearchClient
-                .indices()
-                .deleteIndex(deleteIndexRequest -> {
-                    String[] indicesArray = indices.toArray(String[]::new);
-
-                    log.info(String.format("Delete indices: %s", Arrays.toString(indicesArray)));
-
-                    deleteIndexRequest.indices(indicesArray);
-                })
-                .block();
-        reactiveElasticsearchClient
-                .indices()
-                .createIndex(createIndexRequest -> {
-                    log.info(String.format("Create indices: %s", indices.toString()));
-
-                    indices.forEach(createIndexRequest::index);
-                }).block();
+        this.deleteIndices(indices);
+        this.createIndices(indices);
     }
 }
