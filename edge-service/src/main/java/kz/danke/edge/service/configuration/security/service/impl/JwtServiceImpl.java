@@ -1,29 +1,33 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security.service.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import kz.danke.user.service.config.AppConfigProperties;
-import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 
-@Service("userJwtService")
+@Service
 public class JwtServiceImpl implements JwtService<String> {
 
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
+    @Value("${app.jwt.expiration}")
+    private String jwtExpiration;
+
     private final JsonObjectMapper jsonObjectMapper;
-    private final AppConfigProperties appConfigProperties;
 
     @Autowired
-    public JwtServiceImpl(JsonObjectMapper jsonObjectMapper,
-                          AppConfigProperties appConfigProperties) {
+    public JwtServiceImpl(JsonObjectMapper jsonObjectMapper) {
         this.jsonObjectMapper = jsonObjectMapper;
-        this.appConfigProperties = appConfigProperties;
     }
 
     @Override
@@ -34,7 +38,7 @@ public class JwtServiceImpl implements JwtService<String> {
 
     @Override
     public Claims extractTokenClaims(String token) {
-        String secret = Base64.getEncoder().encodeToString(appConfigProperties.getJwt().getSecret().getBytes());
+        String secret = Base64.getEncoder().encodeToString(jwtSecret.getBytes());
 
         return Jwts.parserBuilder()
                 .setSigningKey(secret)
@@ -56,24 +60,24 @@ public class JwtServiceImpl implements JwtService<String> {
         final String oauth2User = "oauth2_user";
 
         HashMap<String, Object> claims = new HashMap<>();
-
-        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        OAuth2User principal = (OAuth2User) authentication.getPrincipal();
 
         String serializedUserDetails = jsonObjectMapper.serializeObject(principal);
 
-        claims.put(keyUserClaims, serializedUserDetails);
-        claims.put(oauth2User, null);
+        claims.put(keyUserClaims, null);
+        claims.put(oauth2User, serializedUserDetails);
 
         Date creationDate = new Date();
-        Date expirationDate = new Date(creationDate.getTime() + appConfigProperties.getJwt().getExpiration() * 1000);
+        Date expirationDate = new Date(creationDate.getTime() + Long.parseLong(jwtExpiration) * 1000);
+        String email = (String) principal.getAttributes().get("email");
 
         return Jwts
                 .builder()
                 .setClaims(claims)
-                .setSubject(principal.getUsername())
+                .setSubject(email)
                 .setIssuedAt(creationDate)
                 .setExpiration(expirationDate)
-                .signWith(Keys.hmacShaKeyFor(appConfigProperties.getJwt().getSecret().getBytes()))
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
                 .compact();
     }
 }

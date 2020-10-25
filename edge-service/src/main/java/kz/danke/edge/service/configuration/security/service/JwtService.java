@@ -1,4 +1,4 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security.service;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.Authentication;

@@ -21,9 +21,7 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
     public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
         ServerWebExchange exchange = webFilterExchange.getExchange();
 
-        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-
-        String token = userJwtService.generateToken(principal);
+        String token = userJwtService.generateToken(authentication);
 
         webFilterExchange
                 .getExchange()
