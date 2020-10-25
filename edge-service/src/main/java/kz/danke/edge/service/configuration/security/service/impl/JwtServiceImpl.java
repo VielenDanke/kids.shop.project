@@ -15,7 +15,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 
-@Service
+@Service("userJwtService")
 public class JwtServiceImpl implements JwtService<String> {
 
     @Value("${app.jwt.secret}")

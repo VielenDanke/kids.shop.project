@@ -21,6 +21,7 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
         return ReactiveSecurityContextHolder.getContext()
                 .flatMap(securityContext -> {
                     securityContext.setAuthentication(authentication);
+
                     ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
 
                     String authorizationToken = jwtService.generateToken(authentication);

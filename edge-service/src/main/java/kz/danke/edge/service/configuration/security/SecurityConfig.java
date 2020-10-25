@@ -1,5 +1,6 @@
 package kz.danke.edge.service.configuration.security;
 
+import kz.danke.edge.service.configuration.security.service.JwtService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +48,13 @@ public class SecurityConfig {
     }
 
     @Bean("userRedirectSuccessHandler")
-    public ServerAuthenticationSuccessHandler userRedirectSuccessHandler() {
-        return new UserServerAuthenticationSuccessHandler();
+    public ServerAuthenticationSuccessHandler userRedirectSuccessHandler(
+            @Qualifier("userJwtService") JwtService<String> jwtService
+    ) {
+        UserServerAuthenticationSuccessHandler successHandler = new UserServerAuthenticationSuccessHandler();
+
+        successHandler.setJwtService(jwtService);
+
+        return successHandler;
     }
 }

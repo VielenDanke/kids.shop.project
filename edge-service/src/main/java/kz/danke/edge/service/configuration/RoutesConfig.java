@@ -19,8 +19,6 @@ public class RoutesConfig {
                                 .method(HttpMethod.GET)
                                 .and()
                                 .path("/clothes")
-                                .filters(f -> f.rewritePath("/clothes",
-                                        "/clothes"))
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -28,7 +26,7 @@ public class RoutesConfig {
                         getClothByIdPredicate -> getClothByIdPredicate
                         .method(HttpMethod.GET)
                         .and()
-                        .path("/clothes/{id}")
+                        .path("/clothes/*")
                         .filters(
                                 clothByIdFilter -> clothByIdFilter.rewritePath(
                                         "/clothes/(?<segment>.*)",
@@ -43,14 +41,21 @@ public class RoutesConfig {
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/clothes")
-                                .filters(
-                                        clothesPostFilter ->
-                                                clothesPostFilter.rewritePath(
-                                                        "/clothes",
-                                                        "/clothes"
-                                                )
-                                )
                                 .uri("lb://cloth-ms")
+                )
+                .route(
+                        "clothes-add-files",
+                        clothAddFiles -> clothAddFiles
+                        .method(HttpMethod.POST)
+                        .and()
+                        .path("/clothes/*/files")
+                        .filters(
+                                clothAddFilesFilter -> clothAddFilesFilter.rewritePath(
+                                        "/clothes/(?<segment>.*)/files",
+                                        "/clothes/${segment}/files"
+                                )
+                        )
+                        .uri("lb://cloth-ms")
                 )
                 .route(
                         "user-login",

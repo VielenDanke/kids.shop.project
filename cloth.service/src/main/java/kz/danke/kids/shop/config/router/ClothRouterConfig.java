@@ -1,5 +1,6 @@
 package kz.danke.kids.shop.config.router;
 
+import kz.danke.kids.shop.config.handler.ClothHandler;
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.service.ClothService;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +14,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class ClothRouterConfig {
 
     @Bean
-    public RouterFunction<ServerResponse> clothRouterFunction(ClothService clothService) {
+    public RouterFunction<ServerResponse> clothRouterFunction(
+            ClothService clothService, ClothHandler saveHandler
+    ) {
         return RouterFunctions.route(
                 RequestPredicates.GET("/clothes"),
                 serverRequest -> ServerResponse.ok().body(clothService.findAll(), Cloth.class)
@@ -22,6 +25,12 @@ public class ClothRouterConfig {
                 serverRequest -> ServerResponse.ok().body(
                         clothService.findById(serverRequest.pathVariable("id")), Cloth.class
                 )
+        ).andRoute(
+                RequestPredicates.POST("/clothes"),
+                saveHandler::handleClothSaving
+        ).andRoute(
+                RequestPredicates.POST("/clothes/{id}/files"),
+                saveHandler::handleFileSaving
         );
     }
 }

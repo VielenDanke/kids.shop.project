@@ -27,9 +27,9 @@ public class Cloth {
     @Field(type = FieldType.Text, includeInParent = true)
     private String description;
     @Field(type = FieldType.Binary, includeInParent = true)
-    private String mainImage;
-    @Field(type = FieldType.Binary, includeInParent = true)
     private List<String> images = new ArrayList<>();
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private List<Material> materials = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
