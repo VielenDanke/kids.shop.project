@@ -45,7 +45,7 @@ public class GlobalExceptionHandler extends WebFluxResponseStatusExceptionHandle
             DataBuffer dataBuffer = dataBufferFactory.wrap(responseFailedJson.getBytes());
             return decorator.writeWith(Flux.just(dataBuffer));
         } catch (JsonProcessingException e) {
-            log.error("Failed to write response exception");
+            log.error("Failed to write response exception", e);
         }
         return decorator.setComplete();
     }

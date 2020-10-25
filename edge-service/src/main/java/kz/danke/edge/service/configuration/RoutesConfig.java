@@ -20,8 +20,22 @@ public class RoutesConfig {
                                 .and()
                                 .path("/clothes")
                                 .filters(f -> f.rewritePath("/clothes",
-                                        "/api/v1/clothes"))
+                                        "/clothes"))
                                 .uri("lb://cloth-ms")
+                )
+                .route(
+                        "clothes-get-id",
+                        getClothByIdPredicate -> getClothByIdPredicate
+                        .method(HttpMethod.GET)
+                        .and()
+                        .path("/clothes/{id}")
+                        .filters(
+                                clothByIdFilter -> clothByIdFilter.rewritePath(
+                                        "/clothes/(?<segment>.*)",
+                                        "/clothes/${segment}"
+                                )
+                        )
+                        .uri("lb://cloth-ms")
                 )
                 .route(
                         "clothes-post",
@@ -33,7 +47,7 @@ public class RoutesConfig {
                                         clothesPostFilter ->
                                                 clothesPostFilter.rewritePath(
                                                         "/clothes",
-                                                        "/api/v1/clothes"
+                                                        "/clothes"
                                                 )
                                 )
                                 .uri("lb://cloth-ms")
