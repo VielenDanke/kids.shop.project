@@ -1,13 +1,13 @@
 package kz.danke.kids.shop.service.impl;
 
 import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.document.Material;
-import kz.danke.kids.shop.dto.request.ClothSaveRequest;
-import kz.danke.kids.shop.exceptions.FileProcessingException;
+import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
+import kz.danke.kids.shop.service.searching.PublicSearchingObject;
+import kz.danke.kids.shop.service.searching.QueryCreator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -16,16 +16,28 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class ClothServiceImpl implements ClothService {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
+    private final QueryCreator<Cloth, PublicSearchingObject> clothTextSearching;
 
-    public ClothServiceImpl(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl) {
+    public ClothServiceImpl(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl,
+                            QueryCreator<Cloth, PublicSearchingObject> clothTextSearching) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
+        this.clothTextSearching = clothTextSearching;
+    }
+
+    @Override
+    public Flux<Cloth> findAllTextSearching(PublicSearchingObject searchingObject) {
+        return clothTextSearching
+                .findAllTextSearching(searchingObject, Cloth.class)
+                .map(SearchHit::getContent);
     }
 
     @Override

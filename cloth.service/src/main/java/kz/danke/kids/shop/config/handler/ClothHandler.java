@@ -1,10 +1,12 @@
 package kz.danke.kids.shop.config.handler;
 
 import kz.danke.kids.shop.document.Cloth;
+import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.ClothService;
+import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.multipart.Part;
@@ -67,6 +69,22 @@ public class ClothHandler {
                                 .build()),
                         ResponseFailed.class
                         )
+                ).switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> handleClothTextSearching(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(PublicSearchingObject.class)
+                .flatMapMany(clothService::findAllTextSearching)
+                .map(ClothDTO::toClothDTO)
+                .collectList()
+                .flatMap(clothDTOS -> ServerResponse.ok().body(Mono.just(clothDTOS), ClothDTO.class))
+                .onErrorContinue((throwable, o) ->
+                        ServerResponse.badRequest().body(Mono.just(
+                                ResponseFailed.builder()
+                                .description(throwable.getLocalizedMessage() != null ? throwable.getLocalizedMessage() : "Searching failed")
+                                .type(throwable.toString())
+                                .build()
+                        ), ResponseFailed.class)
                 ).switchIfEmpty(ServerResponse.notFound().build());
     }
 }

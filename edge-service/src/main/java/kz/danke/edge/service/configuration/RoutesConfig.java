@@ -24,16 +24,16 @@ public class RoutesConfig {
                 .route(
                         "clothes-get-id",
                         getClothByIdPredicate -> getClothByIdPredicate
-                        .method(HttpMethod.GET)
-                        .and()
-                        .path("/clothes/*")
-                        .filters(
-                                clothByIdFilter -> clothByIdFilter.rewritePath(
-                                        "/clothes/(?<segment>.*)",
-                                        "/clothes/${segment}"
+                                .method(HttpMethod.GET)
+                                .and()
+                                .path("/clothes/*")
+                                .filters(
+                                        clothByIdFilter -> clothByIdFilter.rewritePath(
+                                                "/clothes/(?<segment>.*)",
+                                                "/clothes/${segment}"
+                                        )
                                 )
-                        )
-                        .uri("lb://cloth-ms")
+                                .uri("lb://cloth-ms")
                 )
                 .route(
                         "clothes-post",
@@ -46,30 +46,38 @@ public class RoutesConfig {
                 .route(
                         "clothes-add-files",
                         clothAddFiles -> clothAddFiles
-                        .method(HttpMethod.POST)
-                        .and()
-                        .path("/clothes/*/files")
-                        .filters(
-                                clothAddFilesFilter -> clothAddFilesFilter.rewritePath(
-                                        "/clothes/(?<segment>.*)/files",
-                                        "/clothes/${segment}/files"
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/clothes/*/files")
+                                .filters(
+                                        clothAddFilesFilter -> clothAddFilesFilter.rewritePath(
+                                                "/clothes/(?<segment>.*)/files",
+                                                "/clothes/${segment}/files"
+                                        )
                                 )
-                        )
-                        .uri("lb://cloth-ms")
+                                .uri("lb://cloth-ms")
+                )
+                .route(
+                        "cloth-text-searching",
+                        clothTextSearching -> clothTextSearching
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/clothes/searching")
+                                .uri("lb://cloth-ms")
                 )
                 .route(
                         "user-login",
                         getUserLoginPredicate -> getUserLoginPredicate
-                        .method(HttpMethod.POST)
-                        .and()
-                        .path("/login")
-                        .filters(
-                                userLoginPostFilter ->
-                                        userLoginPostFilter.rewritePath(
-                                                "/login",
-                                                "/auth/login")
-                        )
-                        .uri("lb://user-ms")
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/login")
+                                .filters(
+                                        userLoginPostFilter ->
+                                                userLoginPostFilter.rewritePath(
+                                                        "/login",
+                                                        "/auth/login")
+                                )
+                                .uri("lb://user-ms")
                 )
                 .route(
                         "user-registration",

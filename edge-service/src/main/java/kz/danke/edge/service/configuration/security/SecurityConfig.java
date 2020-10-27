@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .pathMatchers("/oauth2/authorization/*").permitAll()
                 .pathMatchers("/oauth2/user/registration").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
+                .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()

@@ -15,7 +15,7 @@ public class ClothRouterConfig {
 
     @Bean
     public RouterFunction<ServerResponse> clothRouterFunction(
-            ClothService clothService, ClothHandler saveHandler
+            ClothService clothService, ClothHandler clothHandler
     ) {
         return RouterFunctions.route(
                 RequestPredicates.GET("/clothes"),
@@ -27,10 +27,13 @@ public class ClothRouterConfig {
                 )
         ).andRoute(
                 RequestPredicates.POST("/clothes"),
-                saveHandler::handleClothSaving
+                clothHandler::handleClothSaving
         ).andRoute(
                 RequestPredicates.POST("/clothes/{id}/files"),
-                saveHandler::handleFileSaving
+                clothHandler::handleFileSaving
+        ).andRoute(
+                RequestPredicates.POST("/clothes/searching"),
+                clothHandler::handleClothTextSearching
         );
     }
 }
