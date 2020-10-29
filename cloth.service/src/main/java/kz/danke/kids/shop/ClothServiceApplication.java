@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,30 +52,18 @@ public class ClothServiceApplication {
                                 Cloth.builder().id(UUID.randomUUID().toString()).name("name")
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)
-                                        ))
-                                        .images(Collections.singletonList(
-                                                Base64.getEncoder().encodeToString(inputStream.readAllBytes())
                                         )).description("first").build(),
                                 Cloth.builder().id(UUID.randomUUID().toString()).name("name")
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)
-                                        ))
-                                        .images(Collections.singletonList(
-                                                Base64.getEncoder().encodeToString(inputStream.readAllBytes())
                                         )).description("second").build(),
                                 Cloth.builder().id(UUID.randomUUID().toString()).name("name")
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)
-                                        ))
-                                        .images(Collections.singletonList(
-                                                Base64.getEncoder().encodeToString(inputStream.readAllBytes())
                                         )).description("third").build(),
                                 Cloth.builder().id(UUID.randomUUID().toString()).name("name")
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)
-                                        ))
-                                        .images(Collections.singletonList(
-                                                Base64.getEncoder().encodeToString(inputStream.readAllBytes())
                                         )).description("fourth").build()
                         ))
                         .flatMap(clothReactiveElasticsearchRepositoryImpl::save)

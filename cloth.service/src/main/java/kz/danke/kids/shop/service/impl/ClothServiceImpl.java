@@ -1,24 +1,31 @@
 package kz.danke.kids.shop.service.impl;
 
+import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.dto.ClothDTO;
+import kz.danke.kids.shop.exceptions.FileProcessingException;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import kz.danke.kids.shop.service.searching.QueryCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
-import java.util.Base64;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.FileOwnerAttributeView;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 
 @Service
 @Slf4j
@@ -26,11 +33,14 @@ public class ClothServiceImpl implements ClothService {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
     private final QueryCreator<Cloth, PublicSearchingObject> clothTextSearching;
+    private final AppConfigProperties properties;
 
     public ClothServiceImpl(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl,
-                            QueryCreator<Cloth, PublicSearchingObject> clothTextSearching) {
+                            QueryCreator<Cloth, PublicSearchingObject> clothTextSearching,
+                            AppConfigProperties properties) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
         this.clothTextSearching = clothTextSearching;
+        this.properties = properties;
     }
 
     @Override
@@ -54,23 +64,36 @@ public class ClothServiceImpl implements ClothService {
     }
 
     @Override
-    public Mono<Cloth> addFilesToCloth(List<Part> files, String id) {
+    public Mono<Cloth> addFilesToCloth(List<Part> files, final String id) {
+        CopyOnWriteArrayList<String> copyOnWriteArrayList = new CopyOnWriteArrayList<>();
+
         return Flux.fromIterable(files)
-                .flatMap(Part::content)
-                .flatMap(content -> {
-                    try {
-                        return Mono.just(content.asInputStream().readAllBytes());
-                    } catch (IOException e) {
-                        log.error("Error processing files");
-                        return Mono.error(e);
-                    }
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .map(file -> (FilePart) file)
+                .map(filePart -> {
+                    String filename = filePart.filename();
+
+                    String finalFileName = UUID.randomUUID().toString() + filename;
+
+                    Path pathToFile = Paths.get(properties.getDir().getImageStore() + finalFileName);
+
+                    filePart.transferTo(pathToFile);
+
+                    return finalFileName;
                 })
-                .map(bytes -> Base64.getEncoder().encodeToString(bytes))
-                .collectList()
-                .flatMap(fileList -> clothReactiveElasticsearchRepositoryImpl.findById(id)
-                        .doOnNext(cloth -> cloth.getImages().addAll(fileList))
-                        .flatMap(clothReactiveElasticsearchRepositoryImpl::save)
-                );
+                .doOnEach(stringSignal -> copyOnWriteArrayList.add(stringSignal.get()))
+                .sequential()
+                .then(clothReactiveElasticsearchRepositoryImpl.findById(id))
+                .flatMap(cloth -> {
+                    cloth.getImages().addAll(copyOnWriteArrayList);
+                    return clothReactiveElasticsearchRepositoryImpl.save(cloth);
+                })
+                .onErrorContinue(Exception.class, (ex, obj) -> {
+                    log.error("Exception during file saving occurred", ex);
+                });
+
+
     }
 
     @Override

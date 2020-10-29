@@ -8,6 +8,19 @@ import java.util.List;
 public class AppConfigProperties {
 
     private Elasticsearch elasticsearch = new Elasticsearch();
+    private Dir dir = new Dir();
+
+    public static class Dir {
+        private String imageStore;
+
+        public String getImageStore() {
+            return imageStore;
+        }
+
+        public void setImageStore(String imageStore) {
+            this.imageStore = imageStore;
+        }
+    }
 
     public static class Elasticsearch {
         private String hostAndPort;
@@ -73,6 +86,14 @@ public class AppConfigProperties {
         public void setHostAndPort(String hostAndPort) {
             this.hostAndPort = hostAndPort;
         }
+    }
+
+    public Dir getDir() {
+        return dir;
+    }
+
+    public void setDir(Dir dir) {
+        this.dir = dir;
     }
 
     public Elasticsearch getElasticsearch() {

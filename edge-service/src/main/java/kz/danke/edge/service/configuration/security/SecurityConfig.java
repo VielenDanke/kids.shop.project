@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .pathMatchers("/oauth2/user/registration").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
+                .pathMatchers(HttpMethod.POST, "/clothes/*/files").permitAll() // remove after security would be done
                 .anyExchange()
                 .authenticated()
                 .and()
