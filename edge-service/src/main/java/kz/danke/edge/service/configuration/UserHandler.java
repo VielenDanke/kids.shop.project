@@ -27,7 +27,6 @@ public class UserHandler {
     public Mono<ServerResponse> handleRegistration(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(RegistrationRequest.class)
                 .map(registrationRequest -> User.builder()
-                        .id(UUID.randomUUID().toString())
                         .username(registrationRequest.getUsername())
                         .password(registrationRequest.getPassword())
                         .build()

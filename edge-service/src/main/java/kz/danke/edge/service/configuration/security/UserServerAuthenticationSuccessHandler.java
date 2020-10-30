@@ -4,10 +4,14 @@ import kz.danke.edge.service.configuration.security.service.JwtService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class UserServerAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
@@ -24,11 +28,19 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
 
         String token = userJwtService.generateToken(authentication);
 
-        webFilterExchange
+        HttpHeaders headers = webFilterExchange
                 .getExchange()
                 .getResponse()
-                .getHeaders()
+                .getHeaders();
+        headers
                 .add(HttpHeaders.AUTHORIZATION, token);
+        headers
+                .add("Roles",
+                        authentication.getAuthorities()
+                                .stream()
+                                .map(GrantedAuthority::getAuthority)
+                                .collect(Collectors.joining(" "))
+                );
 
         return webFilterExchange.getChain().filter(exchange);
     }

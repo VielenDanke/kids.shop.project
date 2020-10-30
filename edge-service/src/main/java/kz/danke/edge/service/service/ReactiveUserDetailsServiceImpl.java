@@ -1,6 +1,7 @@
 package kz.danke.edge.service.service;
 
 import kz.danke.edge.service.configuration.security.UserDetailsImpl;
+import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
+
+import java.util.Collections;
+import java.util.UUID;
 
 @Service
 public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsService, ReactiveUserDetailsPasswordService, UserService {
@@ -40,6 +44,11 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
 
     @Override
     public Mono<User> save(User user) {
-        return reactiveUserRepository.save(user);
+        return Mono.just(user)
+                .doOnNext(usr -> {
+                    usr.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
+                    usr.setId(UUID.randomUUID().toString());
+                })
+                .flatMap(reactiveUserRepository::save);
     }
 }

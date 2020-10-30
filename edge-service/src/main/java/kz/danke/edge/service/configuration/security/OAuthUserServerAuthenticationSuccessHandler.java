@@ -1,6 +1,7 @@
 package kz.danke.edge.service.configuration.security;
 
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +30,7 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
                     String authorizationToken = jwtService.generateToken(authentication);
 
                     response.getHeaders().add(HttpHeaders.AUTHORIZATION, authorizationToken);
+                    response.getHeaders().add("Roles", Authorities.ROLE_GUEST.name());
 
                     return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
                 });
