@@ -1,4 +1,4 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

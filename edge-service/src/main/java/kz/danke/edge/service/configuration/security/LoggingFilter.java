@@ -1,4 +1,4 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;

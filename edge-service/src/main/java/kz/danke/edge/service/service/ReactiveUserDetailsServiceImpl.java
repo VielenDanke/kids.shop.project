@@ -1,7 +1,8 @@
-package kz.danke.user.service.service;
+package kz.danke.edge.service.service;
 
-import kz.danke.user.service.config.security.UserDetailsImpl;
-import kz.danke.user.service.repository.ReactiveUserRepository;
+import kz.danke.edge.service.configuration.security.UserDetailsImpl;
+import kz.danke.edge.service.document.User;
+import kz.danke.edge.service.repository.ReactiveUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsPasswordService;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
@@ -11,7 +12,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Service
-public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
+public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsService, ReactiveUserDetailsPasswordService, UserService {
 
     private final ReactiveUserRepository reactiveUserRepository;
 
@@ -35,5 +36,10 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
                 .doOnSuccess(user -> user.setPassword(newPassword))
                 .flatMap(reactiveUserRepository::save)
                 .map(UserDetailsImpl::buildUserDetails);
+    }
+
+    @Override
+    public Mono<User> save(User user) {
+        return reactiveUserRepository.save(user);
     }
 }

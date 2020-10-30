@@ -1,7 +1,7 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security;
 
-import kz.danke.user.service.document.Authorities;
-import kz.danke.user.service.document.User;
+import kz.danke.edge.service.document.Authorities;
+import kz.danke.edge.service.document.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

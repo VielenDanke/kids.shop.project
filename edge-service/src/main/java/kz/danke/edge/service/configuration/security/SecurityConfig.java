@@ -1,25 +1,108 @@
 package kz.danke.edge.service.configuration.security;
 
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.repository.ReactiveUserRepository;
+import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.net.URI;
 
 @Configuration
 @EnableWebFluxSecurity
+@Slf4j
 public class SecurityConfig {
 
     @Bean
+    public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(PasswordEncoder passwordEncoder,
+                                                                                                                 ReactiveUserDetailsServiceImpl reactiveUserDetailsService) {
+        UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
+                new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService);
+
+        userDetailsRepositoryReactiveAuthenticationManager.setPasswordEncoder(passwordEncoder);
+        userDetailsRepositoryReactiveAuthenticationManager.setUserDetailsPasswordService(reactiveUserDetailsService);
+
+        return userDetailsRepositoryReactiveAuthenticationManager;
+    }
+
+    @Bean
+    public ReactiveAuthenticationManagerResolver<ServerWebExchange> authenticationManagerResolver(
+            ReactiveAuthenticationManager reactiveAuthenticationManager
+    ) {
+        return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
+    }
+
+    @Bean("userRedirectSuccessHandler")
+    public ServerAuthenticationSuccessHandler userRedirectSuccessHandler(
+            @Qualifier("userJwtService") JwtService<String> jwtService,
+            ReactiveUserRepository reactiveUserRepository
+    ) {
+        OAuthUserServerAuthenticationSuccessHandler successHandler = new OAuthUserServerAuthenticationSuccessHandler();
+
+        successHandler.setJwtService(jwtService);
+
+        return successHandler;
+    }
+
+    @Bean
+    public ServerLogoutSuccessHandler logoutSuccessHandler() {
+        RedirectServerLogoutSuccessHandler logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
+        logoutSuccessHandler.setLogoutSuccessUrl(URI.create("/"));
+        return logoutSuccessHandler;
+    }
+
+    @Bean("logoutSuccessHandler")
+    public LoggingFilter loggingFilter(
+            UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
+            @Qualifier("userJwtService") JwtService<String> jwtService
+    ) {
+        LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
+
+        UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
+
+        loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+
+        return loggingFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        final int strength = 8;
+
+        return new BCryptPasswordEncoder(strength);
+    }
+
+    /*
+    Post request on login with headers application/x-www-form-urlencoded
+
+    because getFormData method on ServerWebRequest can read only with this header
+     */
+    @Bean
     public SecurityWebFilterChain securityApplied(
             ServerHttpSecurity httpSecurity,
-            @Qualifier("userRedirectSuccessHandler") ServerAuthenticationSuccessHandler successHandler
+            @Qualifier("userRedirectSuccessHandler") ServerAuthenticationSuccessHandler successHandler,
+            LoggingFilter loggingFilter,
+            UserAuthorizationTokenFilter tokenFilter,
+            @Qualifier("logoutSuccessHandler") ServerLogoutSuccessHandler logoutSuccessHandler
     ) {
         httpSecurity
                 .csrf()
@@ -27,8 +110,8 @@ public class SecurityConfig {
                 .authorizeExchange()
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
-                .pathMatchers(HttpMethod.POST, "/registration").permitAll()
-                .pathMatchers(HttpMethod.POST, "/login").permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .pathMatchers("/login/oauth2/code/*").permitAll()
                 .pathMatchers("/oauth2/authorization/*").permitAll()
                 .pathMatchers("/oauth2/user/registration").permitAll()
@@ -42,21 +125,16 @@ public class SecurityConfig {
                 .disable()
                 .formLogin()
                 .disable()
+                .logout()
+                .logoutSuccessHandler(logoutSuccessHandler)
+                .and()
                 .oauth2Login()
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .authenticationSuccessHandler(successHandler);
+                .authenticationSuccessHandler(successHandler)
+                .and()
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.HTTP_BASIC)
+                .addFilterAt(tokenFilter, SecurityWebFiltersOrder.AUTHORIZATION);
 
         return httpSecurity.build();
-    }
-
-    @Bean("userRedirectSuccessHandler")
-    public ServerAuthenticationSuccessHandler userRedirectSuccessHandler(
-            @Qualifier("userJwtService") JwtService<String> jwtService
-    ) {
-        UserServerAuthenticationSuccessHandler successHandler = new UserServerAuthenticationSuccessHandler();
-
-        successHandler.setJwtService(jwtService);
-
-        return successHandler;
     }
 }

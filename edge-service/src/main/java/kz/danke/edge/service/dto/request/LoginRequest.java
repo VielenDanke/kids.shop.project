@@ -1,4 +1,4 @@
-package kz.danke.user.service.dto.request;
+package kz.danke.edge.service.dto.request;
 
 public class LoginRequest {
 

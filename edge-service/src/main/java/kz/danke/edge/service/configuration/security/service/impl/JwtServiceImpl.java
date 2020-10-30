@@ -3,11 +3,14 @@ package kz.danke.edge.service.configuration.security.service.impl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import kz.danke.edge.service.configuration.AppConfigProperties;
+import kz.danke.edge.service.configuration.security.UserDetailsImpl;
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.exception.UnknownPrincipalException;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -18,15 +21,13 @@ import java.util.HashMap;
 @Service("userJwtService")
 public class JwtServiceImpl implements JwtService<String> {
 
-    @Value("${app.jwt.secret}")
-    private String jwtSecret;
-    @Value("${app.jwt.expiration}")
-    private String jwtExpiration;
-
+    private final AppConfigProperties properties;
     private final JsonObjectMapper jsonObjectMapper;
 
     @Autowired
-    public JwtServiceImpl(JsonObjectMapper jsonObjectMapper) {
+    public JwtServiceImpl(AppConfigProperties properties,
+                          JsonObjectMapper jsonObjectMapper) {
+        this.properties = properties;
         this.jsonObjectMapper = jsonObjectMapper;
     }
 
@@ -38,7 +39,7 @@ public class JwtServiceImpl implements JwtService<String> {
 
     @Override
     public Claims extractTokenClaims(String token) {
-        String secret = Base64.getEncoder().encodeToString(jwtSecret.getBytes());
+        String secret = Base64.getEncoder().encodeToString(properties.getJwt().getSecret().getBytes());
 
         return Jwts.parserBuilder()
                 .setSigningKey(secret)
@@ -57,27 +58,32 @@ public class JwtServiceImpl implements JwtService<String> {
     @Override
     public String generateToken(Authentication authentication) {
         final String keyUserClaims = "user";
-        final String oauth2User = "oauth2_user";
+        final String subject;
+        final Object principal = authentication.getPrincipal();
 
         HashMap<String, Object> claims = new HashMap<>();
-        OAuth2User principal = (OAuth2User) authentication.getPrincipal();
-
         String serializedUserDetails = jsonObjectMapper.serializeObject(principal);
 
-        claims.put(keyUserClaims, null);
-        claims.put(oauth2User, serializedUserDetails);
+        claims.put(keyUserClaims, serializedUserDetails);
 
         Date creationDate = new Date();
-        Date expirationDate = new Date(creationDate.getTime() + Long.parseLong(jwtExpiration) * 1000);
-        String email = (String) principal.getAttributes().get("email");
+        Date expirationDate = new Date(creationDate.getTime() + properties.getJwt().getExpiration() * 1000);
+
+        if (principal.getClass().isAssignableFrom(DefaultOAuth2User.class)) {
+            subject = (String) ((DefaultOAuth2User) principal).getAttributes().get("email");
+        } else if (principal.getClass().isAssignableFrom(UserDetailsImpl.class)) {
+            subject = ((UserDetailsImpl) principal).getUsername();
+        } else {
+            throw new UnknownPrincipalException("Principal is unknown");
+        }
 
         return Jwts
                 .builder()
                 .setClaims(claims)
-                .setSubject(email)
+                .setSubject(subject)
                 .setIssuedAt(creationDate)
                 .setExpiration(expirationDate)
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                .signWith(Keys.hmacShaKeyFor(properties.getJwt().getSecret().getBytes()))
                 .compact();
     }
 }
