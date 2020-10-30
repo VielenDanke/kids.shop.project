@@ -1,6 +1,7 @@
 package kz.danke.edge.service.configuration.security.service;
 
 import io.jsonwebtoken.Claims;
+import kz.danke.edge.service.document.User;
 import org.springframework.security.core.Authentication;
 
 public interface JwtService<T> {
@@ -11,5 +12,5 @@ public interface JwtService<T> {
 
     boolean validateToken(String token);
 
-    String generateToken(Authentication authentication);
+    String generateToken(User user);
 }

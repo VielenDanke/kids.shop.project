@@ -1,6 +1,7 @@
 package kz.danke.edge.service.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,10 @@ import org.springframework.stereotype.Component;
 public class JsonObjectMapper {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    {
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     public <T> String serializeObject(T t) {
         String json = null;

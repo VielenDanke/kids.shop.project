@@ -26,6 +26,12 @@ public class User {
     @Field(type = FieldType.Text)
     private String password;
     @Field(type = FieldType.Text)
+    private String firsName;
+    @Field(type = FieldType.Text)
+    private String surname;
+    @Field(type = FieldType.Text)
+    private String address;
+    @Field(type = FieldType.Text)
     private Set<String> authorities;
 
     @Override

@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import kz.danke.edge.service.configuration.AppConfigProperties;
 import kz.danke.edge.service.configuration.security.UserDetailsImpl;
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.exception.UnknownPrincipalException;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,31 +57,22 @@ public class JwtServiceImpl implements JwtService<String> {
     }
 
     @Override
-    public String generateToken(Authentication authentication) {
+    public String generateToken(User user) {
         final String keyUserClaims = "user";
-        final String subject;
-        final Object principal = authentication.getPrincipal();
 
         HashMap<String, Object> claims = new HashMap<>();
-        String serializedUserDetails = jsonObjectMapper.serializeObject(principal);
 
-        claims.put(keyUserClaims, serializedUserDetails);
+        String serializedUser = jsonObjectMapper.serializeObject(user);
+
+        claims.put(keyUserClaims, serializedUser);
 
         Date creationDate = new Date();
         Date expirationDate = new Date(creationDate.getTime() + properties.getJwt().getExpiration() * 1000);
 
-        if (principal.getClass().isAssignableFrom(DefaultOAuth2User.class)) {
-            subject = (String) ((DefaultOAuth2User) principal).getAttributes().get("email");
-        } else if (principal.getClass().isAssignableFrom(UserDetailsImpl.class)) {
-            subject = ((UserDetailsImpl) principal).getUsername();
-        } else {
-            throw new UnknownPrincipalException("Principal is unknown");
-        }
-
         return Jwts
                 .builder()
                 .setClaims(claims)
-                .setSubject(subject)
+                .setSubject(user.getUsername())
                 .setIssuedAt(creationDate)
                 .setExpiration(expirationDate)
                 .signWith(Keys.hmacShaKeyFor(properties.getJwt().getSecret().getBytes()))

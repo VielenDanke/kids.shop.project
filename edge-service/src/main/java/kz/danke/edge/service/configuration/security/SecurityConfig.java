@@ -3,6 +3,7 @@ package kz.danke.edge.service.configuration.security;
 import kz.danke.edge.service.configuration.security.service.JwtService;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
+import kz.danke.edge.service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
@@ -59,6 +60,7 @@ public class SecurityConfig {
         OAuthUserServerAuthenticationSuccessHandler successHandler = new OAuthUserServerAuthenticationSuccessHandler();
 
         successHandler.setJwtService(jwtService);
+        successHandler.setReactiveUserRepository(reactiveUserRepository);
 
         return successHandler;
     }
@@ -73,11 +75,14 @@ public class SecurityConfig {
     @Bean("logoutSuccessHandler")
     public LoggingFilter loggingFilter(
             UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
-            @Qualifier("userJwtService") JwtService<String> jwtService
+            @Qualifier("userJwtService") JwtService<String> jwtService,
+            ReactiveUserRepository reactiveUserRepository
     ) {
         LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
 
         UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
+
+        authenticationSuccessHandler.setReactiveUserRepository(reactiveUserRepository);
 
         loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
 

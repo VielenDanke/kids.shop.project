@@ -45,10 +45,14 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
     @Override
     public Mono<User> save(User user) {
         return Mono.just(user)
-                .doOnNext(usr -> {
-                    usr.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
-                    usr.setId(UUID.randomUUID().toString());
-                })
-                .flatMap(reactiveUserRepository::save);
+                .flatMap(userFrom -> reactiveUserRepository.findByUsername(userFrom.getUsername()))
+                .switchIfEmpty(Mono.just(user))
+                .flatMap(emptyUser -> {
+                    emptyUser.setId(UUID.randomUUID().toString());
+                    emptyUser.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
+
+                    return reactiveUserRepository.save(emptyUser);
+                });
+
     }
 }

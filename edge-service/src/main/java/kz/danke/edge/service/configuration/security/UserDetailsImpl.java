@@ -2,6 +2,7 @@ package kz.danke.edge.service.configuration.security;
 
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.User;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,17 +11,14 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@ToString
 public class UserDetailsImpl implements UserDetails {
 
-    private String id;
-    private String username;
-    private String password;
+    private User user;
     private Set<? extends GrantedAuthority> authorities;
 
-    private UserDetailsImpl(String id, String username, String password, Set<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
+    private UserDetailsImpl(User user, Set<? extends GrantedAuthority> authorities) {
+        this.user = user;
         this.authorities = authorities;
     }
 
@@ -32,9 +30,7 @@ public class UserDetailsImpl implements UserDetails {
                 .collect(Collectors.toSet());
 
         return new UserDetailsImpl(
-                user.getId(),
-                user.getUsername(),
-                user.getPassword(),
+                user,
                 roles
         );
     }
@@ -46,12 +42,12 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return username;
+        return user.getUsername();
     }
 
     @Override
@@ -75,23 +71,11 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public String getId() {
-        return id;
+        return user.getId();
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setAuthorities(Set<? extends GrantedAuthority> authorities) {
-        this.authorities = authorities;
+    public User getUser() {
+        return user;
     }
 
     private static boolean validateRole(String role) {
@@ -103,15 +87,5 @@ public class UserDetailsImpl implements UserDetails {
             }
         }
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return "UserDetailsImpl{" +
-                "id='" + id + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", authorities=" + authorities +
-                '}';
     }
 }
