@@ -58,11 +58,11 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
 
                     return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
                 })
-                .onErrorResume(ex -> {
+                .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
                     webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
 
                     return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
-                });
+                }));
 
     }
 

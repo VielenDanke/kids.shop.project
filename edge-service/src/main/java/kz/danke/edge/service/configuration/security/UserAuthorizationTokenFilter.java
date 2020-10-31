@@ -3,10 +3,13 @@ package kz.danke.edge.service.configuration.security;
 import kz.danke.edge.service.configuration.security.service.JwtService;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.User;
+import kz.danke.edge.service.exception.ResponseFailed;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +24,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,14 +79,26 @@ public class UserAuthorizationTokenFilter implements WebFilter {
                     })
                     .flatMap(user -> chain.filter(exchange))
                     .switchIfEmpty(
-                            Mono.just(exchange)
-                                    .doOnNext(exc -> exc.getResponse().setRawStatusCode(401))
-                                    .flatMap(chain::filter)
+                            Mono.defer(() -> Mono.just(exchange).doOnNext(exc -> exc.getResponse().setRawStatusCode(401))
+                            .flatMap(chain::filter))
                     )
-                    .onErrorResume(ex -> {
+                    .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
                         exchange.getResponse().setRawStatusCode(401);
+                        DataBufferFactory dataBufferFactory = exchange.getResponse().bufferFactory();
+
+                        ResponseFailed responseFailed = new ResponseFailed(
+                                ex.toString(),
+                                ex.getLocalizedMessage(), exchange.getRequest().getPath().value()
+                        );
+
+                        String serializedResponseFailed = jsonObjectMapper.serializeObject(responseFailed);
+
+                        DataBuffer dataBuffer = dataBufferFactory.wrap(serializedResponseFailed.getBytes(StandardCharsets.UTF_8));
+
+                        exchange.getResponse().writeWith(Mono.just(dataBuffer));
+
                         return chain.filter(exchange);
-                    });
+                    }));
         }
         return chain.filter(exchange);
     }
