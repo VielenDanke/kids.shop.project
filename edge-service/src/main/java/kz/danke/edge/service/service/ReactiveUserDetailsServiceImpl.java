@@ -3,6 +3,7 @@ package kz.danke.edge.service.service;
 import kz.danke.edge.service.configuration.security.UserDetailsImpl;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.User;
+import kz.danke.edge.service.exception.UserAlreadyExistsException;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsPasswordService;
@@ -44,14 +45,17 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
 
     @Override
     public Mono<User> save(User user) {
-        return Mono.just(user)
-                .flatMap(userFrom -> reactiveUserRepository.findByUsername(userFrom.getUsername()))
-                .switchIfEmpty(Mono.just(user))
-                .flatMap(emptyUser -> {
-                    emptyUser.setId(UUID.randomUUID().toString());
-                    emptyUser.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
-
-                    return reactiveUserRepository.save(emptyUser);
+        return reactiveUserRepository
+                .findByUsername(user.getUsername())
+                .flatMap(userFromDb -> {
+                    if (userFromDb != null) {
+                        return Mono.defer(() -> Mono.error(new UserAlreadyExistsException(
+                                String.format("User with username %s already exists", user.getUsername())
+                        )));
+                    }
+                    user.setId(UUID.randomUUID().toString());
+                    user.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
+                    return reactiveUserRepository.save(user);
                 });
 
     }

@@ -3,6 +3,8 @@ package kz.danke.edge.service.configuration;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.dto.request.RegistrationRequest;
 import kz.danke.edge.service.dto.response.RegistrationResponse;
+import kz.danke.edge.service.exception.ResponseFailed;
+import kz.danke.edge.service.exception.UserAlreadyExistsException;
 import kz.danke.edge.service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +42,12 @@ public class UserHandler {
                 .flatMap(registrationResponse -> ServerResponse.ok().body(
                         Mono.just(registrationResponse),
                         RegistrationResponse.class)
-                ).onErrorContinue(Exception.class, (ex, obj) -> ServerResponse.badRequest().build())
+                )
+                .onErrorContinue(Exception.class, (ex, obj) -> ServerResponse.badRequest().build())
+                .onErrorResume(UserAlreadyExistsException.class, (ex) -> {
+                    ResponseFailed responseFailed = new ResponseFailed(ex.toString(), ex.getLocalizedMessage());
+                    return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
+                })
                 .switchIfEmpty(ServerResponse.notFound().build());
 
     }
