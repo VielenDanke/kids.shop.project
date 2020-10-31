@@ -1,6 +1,7 @@
 package kz.danke.edge.service.configuration.security;
 
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
 import kz.danke.edge.service.service.UserService;
@@ -122,7 +123,7 @@ public class SecurityConfig {
                 .pathMatchers("/oauth2/user/registration").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
-                .pathMatchers(HttpMethod.POST, "/clothes/*/files").permitAll() // remove after security would be done
+                .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasRole(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()
                 .authenticated()
                 .and()

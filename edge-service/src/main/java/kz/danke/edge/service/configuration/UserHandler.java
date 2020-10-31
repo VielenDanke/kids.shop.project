@@ -13,8 +13,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
-
 @Component
 @Slf4j
 public class UserHandler {
@@ -43,11 +41,22 @@ public class UserHandler {
                         Mono.just(registrationResponse),
                         RegistrationResponse.class)
                 )
-                .onErrorContinue(Exception.class, (ex, obj) -> ServerResponse.badRequest().build())
-                .onErrorResume(UserAlreadyExistsException.class, (ex) -> {
-                    ResponseFailed responseFailed = new ResponseFailed(ex.toString(), ex.getLocalizedMessage());
+                .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
+                    ResponseFailed responseFailed = new ResponseFailed(
+                            ex.toString(),
+                            ex.getLocalizedMessage(),
+                            serverRequest.path()
+                    );
                     return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
-                })
+                }))
+                .onErrorContinue(UserAlreadyExistsException.class, (ex, obj) -> Mono.defer(() -> {
+                    ResponseFailed responseFailed = new ResponseFailed(
+                            ex.toString(),
+                            ex.getLocalizedMessage(),
+                            serverRequest.path()
+                    );
+                    return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
+                }))
                 .switchIfEmpty(ServerResponse.notFound().build());
 
     }

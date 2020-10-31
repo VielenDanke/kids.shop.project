@@ -31,9 +31,12 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
                 .doOnNext(securityContext -> securityContext.setAuthentication(authentication))
                 .map(securityContext -> authentication.getPrincipal())
                 .cast(DefaultOAuth2User.class)
-                .flatMap(defaultOAuth2User -> reactiveUserRepository.findByUsername(
-                        defaultOAuth2User.getAttribute("email")
-                ))
+                .flatMap(defaultOAuth2User -> {
+                    final String emailAttribute = "email";
+                    return reactiveUserRepository.findByUsername(
+                            defaultOAuth2User.getAttribute(emailAttribute)
+                    );
+                })
                 .switchIfEmpty(
                         reactiveUserRepository.save(
                                 User.builder()
