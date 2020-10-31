@@ -41,23 +41,21 @@ public class UserHandler {
                         Mono.just(registrationResponse),
                         RegistrationResponse.class)
                 )
-                .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
+                .onErrorResume(Exception.class, ex -> {
                     ResponseFailed responseFailed = new ResponseFailed(
                             ex.toString(),
                             ex.getLocalizedMessage(),
                             serverRequest.path()
                     );
                     return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
-                }))
-                .onErrorContinue(UserAlreadyExistsException.class, (ex, obj) -> Mono.defer(() -> {
+                })
+                .onErrorResume(UserAlreadyExistsException.class, ex -> {
                     ResponseFailed responseFailed = new ResponseFailed(
                             ex.toString(),
                             ex.getLocalizedMessage(),
                             serverRequest.path()
                     );
                     return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
-                }))
-                .switchIfEmpty(ServerResponse.notFound().build());
-
+                });
     }
 }

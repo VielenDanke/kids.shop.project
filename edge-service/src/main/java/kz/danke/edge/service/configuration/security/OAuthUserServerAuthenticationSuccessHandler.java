@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
@@ -30,7 +31,7 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
         return ReactiveSecurityContextHolder.getContext()
                 .doOnNext(securityContext -> securityContext.setAuthentication(authentication))
                 .map(securityContext -> authentication.getPrincipal())
-                .cast(DefaultOAuth2User.class)
+                .cast(DefaultOidcUser.class)
                 .flatMap(defaultOAuth2User -> {
                     final String emailAttribute = "email";
                     return reactiveUserRepository.findByUsername(
@@ -38,12 +39,16 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
                     );
                 })
                 .switchIfEmpty(
-                        reactiveUserRepository.save(
-                                User.builder()
-                                        .id(UUID.randomUUID().toString())
-                                        .username(((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email"))
-                                        .authorities(Collections.singleton(Authorities.ROLE_USER.name()))
-                                        .build()
+                        Mono.defer(() -> {
+                            DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
+                                    return reactiveUserRepository.save(
+                                            User.builder()
+                                                    .id(UUID.randomUUID().toString())
+                                                    .username(principal.getAttribute("email"))
+                                                    .authorities(Collections.singleton(Authorities.ROLE_USER.name()))
+                                                    .build()
+                                            );
+                                }
                         )
                 )
                 .flatMap(user -> {
@@ -58,11 +63,11 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
 
                     return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
                 })
-                .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
+                .onErrorResume(Exception.class, ex -> {
                     webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
 
                     return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
-                }));
+                });
 
     }
 

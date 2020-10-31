@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-@Document(indexName = "cloth.shop.user")
+@Document(indexName = "cloth.shop.user", createIndex = false)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,6 +31,8 @@ public class User {
     private String surname;
     @Field(type = FieldType.Text)
     private String address;
+    @Field(type = FieldType.Text)
+    private String phoneNumber;
     @Field(type = FieldType.Text)
     private Set<String> authorities;
 

@@ -28,8 +28,17 @@ public class AppConfigProperties {
         private String password;
         private List<String> classList;
         private ElasticsearchCreationPolicy creationPolicy = ElasticsearchCreationPolicy.NONE;
+        private String basePackage;
         private String jksStorePath;
         private String jksPassword;
+
+        public String getBasePackage() {
+            return basePackage;
+        }
+
+        public void setBasePackage(String basePackage) {
+            this.basePackage = basePackage;
+        }
 
         public String getJksStorePath() {
             return jksStorePath;

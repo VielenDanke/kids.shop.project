@@ -1,6 +1,9 @@
 package kz.danke.edge.service.configuration;
 
+import kz.danke.edge.service.configuration.elasticsearch.ElasticsearchCreationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.List;
 
 @ConfigurationProperties(prefix = "app")
 public class AppConfigProperties {
@@ -33,8 +36,19 @@ public class AppConfigProperties {
         private String hostAndPort;
         private String username;
         private String password;
+        private List<String> classList;
+        private ElasticsearchCreationPolicy creationPolicy = ElasticsearchCreationPolicy.NONE;
+        private String basePackage;
         private String jksStorePath;
         private String jksPassword;
+
+        public String getBasePackage() {
+            return basePackage;
+        }
+
+        public void setBasePackage(String basePackage) {
+            this.basePackage = basePackage;
+        }
 
         public String getJksStorePath() {
             return jksStorePath;
@@ -50,6 +64,22 @@ public class AppConfigProperties {
 
         public void setJksPassword(String jksPassword) {
             this.jksPassword = jksPassword;
+        }
+
+        public ElasticsearchCreationPolicy getCreationPolicy() {
+            return creationPolicy;
+        }
+
+        public void setCreationPolicy(ElasticsearchCreationPolicy creationPolicy) {
+            this.creationPolicy = creationPolicy;
+        }
+
+        public List<String> getClassList() {
+            return classList;
+        }
+
+        public void setClassList(List<String> classList) {
+            this.classList = classList;
         }
 
         public String getUsername() {

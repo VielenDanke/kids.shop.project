@@ -73,7 +73,7 @@ public class SecurityConfig {
         return logoutSuccessHandler;
     }
 
-    @Bean("logoutSuccessHandler")
+    @Bean
     public LoggingFilter loggingFilter(
             UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
             @Qualifier("userJwtService") JwtService<String> jwtService,
@@ -117,7 +117,7 @@ public class SecurityConfig {
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
                 .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
-                .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                .pathMatchers("/auth/login").permitAll()
                 .pathMatchers("/login/oauth2/code/*").permitAll()
                 .pathMatchers("/oauth2/authorization/*").permitAll()
                 .pathMatchers("/oauth2/user/registration").permitAll()
