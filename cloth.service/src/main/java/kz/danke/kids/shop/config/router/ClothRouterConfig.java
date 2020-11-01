@@ -2,9 +2,12 @@ package kz.danke.kids.shop.config.router;
 
 import kz.danke.kids.shop.config.handler.ClothHandler;
 import kz.danke.kids.shop.document.Cloth;
+import kz.danke.kids.shop.exceptions.ClothNotFoundException;
+import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.ClothService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
@@ -24,6 +27,9 @@ public class ClothRouterConfig {
                 RequestPredicates.GET("/clothes/{id}"),
                 serverRequest -> ServerResponse.ok().body(
                         clothService.findById(serverRequest.pathVariable("id")), Cloth.class
+                ).onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(new ResponseFailed(ex.getLocalizedMessage(), ex.toString()), ResponseFailed.class)
                 )
         ).andRoute(
                 RequestPredicates.POST("/clothes"),

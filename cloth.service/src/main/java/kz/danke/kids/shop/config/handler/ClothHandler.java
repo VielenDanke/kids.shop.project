@@ -46,13 +46,10 @@ public class ClothHandler {
                         .description(cloth.getDescription())
                         .build()
                 ).flatMap(clothSaveResponse -> ServerResponse.ok().body(Mono.just(clothSaveResponse), ClothSaveResponse.class))
-                .onErrorContinue(Exception.class, (ex, obj) -> ServerResponse.badRequest().body(
-                        Mono.just(ResponseFailed.builder()
-                                .description(ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Something went wrong")
-                                .type(ex.toString())
-                                .build()),
-                        ResponseFailed.class
-                )).switchIfEmpty(ServerResponse.notFound().build());
+                .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString())),
+                        ResponseFailed.class)
+                );
     }
 
     public Mono<ServerResponse> handleFileSaving(ServerRequest serverRequest) {
@@ -62,14 +59,11 @@ public class ClothHandler {
                 .map(stringPartMultiValueMap -> stringPartMultiValueMap.get(imageKey))
                 .flatMap(partList -> clothService.addFilesToCloth(partList, id))
                 .flatMap(cloth -> ServerResponse.ok().body(Mono.just("Files successfully added"), String.class))
-                .onErrorContinue(Exception.class, (ex, obj) -> ServerResponse.badRequest().body(
-                        Mono.just(ResponseFailed.builder()
-                                .description(ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Something went wrong")
-                                .type(ex.toString())
-                                .build()),
+                .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString())),
                         ResponseFailed.class
                         )
-                ).switchIfEmpty(ServerResponse.notFound().build());
+                );
     }
 
     public Mono<ServerResponse> handleClothTextSearching(ServerRequest serverRequest) {
@@ -78,13 +72,10 @@ public class ClothHandler {
                 .map(ClothDTO::toClothDTO)
                 .collectList()
                 .flatMap(clothDTOS -> ServerResponse.ok().body(Mono.just(clothDTOS), ClothDTO.class))
-                .onErrorContinue((throwable, o) ->
+                .onErrorResume(Exception.class, ex ->
                         ServerResponse.badRequest().body(Mono.just(
-                                ResponseFailed.builder()
-                                .description(throwable.getLocalizedMessage() != null ? throwable.getLocalizedMessage() : "Searching failed")
-                                .type(throwable.toString())
-                                .build()
+                                new ResponseFailed(ex.getLocalizedMessage(), ex.toString())
                         ), ResponseFailed.class)
-                ).switchIfEmpty(ServerResponse.notFound().build());
+                );
     }
 }
