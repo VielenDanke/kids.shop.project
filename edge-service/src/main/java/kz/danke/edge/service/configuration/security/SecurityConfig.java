@@ -55,6 +55,12 @@ public class SecurityConfig {
         return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
     }
 
+    @Bean("userLogoutSuccessHandler")
+    public ServerLogoutSuccessHandler userLogoutSuccessHandler(JsonObjectMapper jsonObjectMapper,
+                                                               JwtService<String> jwtService) {
+        return new UserLogoutSuccessHandler(jwtService, jsonObjectMapper);
+    }
+
     @Bean("oauth2UserRedirectSuccessHandler")
     public ServerAuthenticationSuccessHandler oauth2UserRedirectSuccessHandler(
             @Qualifier("userJwtService") JwtService<String> jwtService,
@@ -73,13 +79,6 @@ public class SecurityConfig {
     @Bean("oauth2UserRedirectFailureHandler")
     public ServerAuthenticationFailureHandler oauth2UserRedirectFailureHandler(JsonObjectMapper jsonObjectMapper) {
         return new OAuthUserServerAuthenticationFailureHandler(jsonObjectMapper);
-    }
-
-    @Bean
-    public ServerLogoutSuccessHandler logoutSuccessHandler() {
-        RedirectServerLogoutSuccessHandler logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
-        logoutSuccessHandler.setLogoutSuccessUrl(URI.create("/"));
-        return logoutSuccessHandler;
     }
 
     @Bean
@@ -123,7 +122,7 @@ public class SecurityConfig {
             @Qualifier("oauth2UserRedirectFailureHandler") ServerAuthenticationFailureHandler oauth2FailureHandler,
             LoggingFilter loggingFilter,
             UserAuthorizationTokenFilter tokenFilter,
-            @Qualifier("logoutSuccessHandler") ServerLogoutSuccessHandler logoutSuccessHandler
+            @Qualifier("userLogoutSuccessHandler") ServerLogoutSuccessHandler userLogoutSuccessHandler
     ) {
         httpSecurity
                 .csrf()
@@ -147,7 +146,7 @@ public class SecurityConfig {
                 .formLogin()
                 .disable()
                 .logout()
-                .logoutSuccessHandler(logoutSuccessHandler)
+                .logoutSuccessHandler(userLogoutSuccessHandler)
                 .and()
                 .oauth2Login()
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
