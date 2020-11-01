@@ -27,6 +27,10 @@ public class Cloth {
     @Field(type = FieldType.Text, includeInParent = true)
     private String description;
     @Field(type = FieldType.Text, includeInParent = true)
+    private String sex;
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private List<LineSize> lineSizes;
+    @Field(type = FieldType.Text, includeInParent = true)
     private List<String> images = new ArrayList<>();
     @Field(type = FieldType.Nested, includeInParent = true)
     private List<Material> materials = new ArrayList<>();
