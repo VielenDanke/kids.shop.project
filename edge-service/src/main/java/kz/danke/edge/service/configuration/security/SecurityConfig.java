@@ -3,6 +3,7 @@ package kz.danke.edge.service.configuration.security;
 import kz.danke.edge.service.configuration.security.service.JwtService;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
+import kz.danke.edge.service.service.JsonObjectMapper;
 import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
 import kz.danke.edge.service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ import java.net.URI;
 @Slf4j
 public class SecurityConfig {
 
-    @Bean
+    @Bean("userDetailsRepositoryReactiveAuthenticationManager")
     public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(PasswordEncoder passwordEncoder,
                                                                                                                  ReactiveUserDetailsServiceImpl reactiveUserDetailsService) {
         UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
@@ -56,12 +57,14 @@ public class SecurityConfig {
     @Bean("userRedirectSuccessHandler")
     public ServerAuthenticationSuccessHandler userRedirectSuccessHandler(
             @Qualifier("userJwtService") JwtService<String> jwtService,
-            ReactiveUserRepository reactiveUserRepository
+            ReactiveUserRepository reactiveUserRepository,
+            JsonObjectMapper jsonObjectMapper
     ) {
         OAuthUserServerAuthenticationSuccessHandler successHandler = new OAuthUserServerAuthenticationSuccessHandler();
 
         successHandler.setJwtService(jwtService);
         successHandler.setReactiveUserRepository(reactiveUserRepository);
+        successHandler.setJsonObjectMapper(jsonObjectMapper);
 
         return successHandler;
     }
@@ -75,17 +78,22 @@ public class SecurityConfig {
 
     @Bean
     public LoggingFilter loggingFilter(
-            UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
+            @Qualifier("userDetailsRepositoryReactiveAuthenticationManager") UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
             @Qualifier("userJwtService") JwtService<String> jwtService,
-            ReactiveUserRepository reactiveUserRepository
+            ReactiveUserRepository reactiveUserRepository,
+            JsonObjectMapper jsonObjectMapper
     ) {
         LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
 
         UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
+        UserServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler();
 
         authenticationSuccessHandler.setReactiveUserRepository(reactiveUserRepository);
+        authenticationSuccessHandler.setJsonObjectMapper(jsonObjectMapper);
+        authenticationFailureHandler.setJsonObjectMapper(jsonObjectMapper);
 
         loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        loggingFilter.setAuthenticationFailureHandler(authenticationFailureHandler);
 
         return loggingFilter;
     }
@@ -138,7 +146,7 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authenticationSuccessHandler(successHandler)
                 .and()
-                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.HTTP_BASIC)
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN)
                 .addFilterAt(tokenFilter, SecurityWebFiltersOrder.AUTHORIZATION);
 
         return httpSecurity.build();

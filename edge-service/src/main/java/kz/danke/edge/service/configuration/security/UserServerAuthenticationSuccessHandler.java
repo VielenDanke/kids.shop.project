@@ -1,18 +1,28 @@
 package kz.danke.edge.service.configuration.security;
 
 import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.dto.response.LoginResponse;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
+import kz.danke.edge.service.service.JsonObjectMapper;
 import kz.danke.edge.service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.mime.Headers;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -21,6 +31,7 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
     private final JwtService<String> userJwtService;
 
     private ReactiveUserRepository reactiveUserRepository;
+    private JsonObjectMapper jsonObjectMapper;
 
     public UserServerAuthenticationSuccessHandler(JwtService<String> userJwtService) {
         this.userJwtService = userJwtService;
@@ -38,16 +49,34 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
 
                     ServerWebExchange exchange = webFilterExchange.getExchange();
 
-                    HttpHeaders headers = exchange.getResponse().getHeaders();
+                    ServerHttpResponse response = exchange.getResponse();
+
+                    DataBufferFactory dataBufferFactory = response.bufferFactory();
+
+                    LoginResponse loginResponse = new LoginResponse(user.getId(), user.getUsername());
+
+                    String loginResponseJson = jsonObjectMapper.serializeObject(loginResponse);
+
+                    DataBuffer wrappedLoginResponseJson = dataBufferFactory
+                            .wrap(loginResponseJson.getBytes(StandardCharsets.UTF_8));
+
+                    response.setStatusCode(HttpStatus.OK);
+
+                    HttpHeaders headers = response.getHeaders();
 
                     headers.add(HttpHeaders.AUTHORIZATION, token);
                     headers.add("Roles", String.join(" ", user.getAuthorities()));
+                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-                    return webFilterExchange.getChain().filter(exchange);
+                    return response.writeWith(Flux.just(wrappedLoginResponseJson));
                 });
     }
 
     public void setReactiveUserRepository(ReactiveUserRepository reactiveUserRepository) {
         this.reactiveUserRepository = reactiveUserRepository;
+    }
+
+    public void setJsonObjectMapper(JsonObjectMapper jsonObjectMapper) {
+        this.jsonObjectMapper = jsonObjectMapper;
     }
 }
