@@ -4,6 +4,7 @@ import kz.danke.edge.service.configuration.security.service.JwtService;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.dto.response.LoginResponse;
+import kz.danke.edge.service.exception.ResponseFailed;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -90,11 +91,24 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
                     return response.writeWith(Flux.just(wrappedLoginResponseJson));
                 })
                 .onErrorResume(Exception.class, ex -> {
-                    webFilterExchange.getExchange().getResponse().setRawStatusCode(401);
+                    ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
 
-                    webFilterExchange.getExchange().getResponse().setComplete();
+                    response.setRawStatusCode(401);
 
-                    return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
+                    DataBufferFactory dataBufferFactory = response.bufferFactory();
+
+                    ResponseFailed responseFailed = new ResponseFailed(
+                            ex.getLocalizedMessage(),
+                            ex.toString(),
+                            webFilterExchange.getExchange().getRequest().getPath().value()
+                    );
+
+                    String responseFailedJson = jsonObjectMapper.serializeObject(responseFailed);
+
+                    DataBuffer wrappedResponseFailedJson = dataBufferFactory
+                            .wrap(responseFailedJson.getBytes(StandardCharsets.UTF_8));
+
+                    return response.writeWith(Flux.just(wrappedResponseFailedJson));
                 });
 
     }

@@ -21,6 +21,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
@@ -54,8 +55,8 @@ public class SecurityConfig {
         return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
     }
 
-    @Bean("userRedirectSuccessHandler")
-    public ServerAuthenticationSuccessHandler userRedirectSuccessHandler(
+    @Bean("oauth2UserRedirectSuccessHandler")
+    public ServerAuthenticationSuccessHandler oauth2UserRedirectSuccessHandler(
             @Qualifier("userJwtService") JwtService<String> jwtService,
             ReactiveUserRepository reactiveUserRepository,
             JsonObjectMapper jsonObjectMapper
@@ -67,6 +68,11 @@ public class SecurityConfig {
         successHandler.setJsonObjectMapper(jsonObjectMapper);
 
         return successHandler;
+    }
+
+    @Bean("oauth2UserRedirectFailureHandler")
+    public ServerAuthenticationFailureHandler oauth2UserRedirectFailureHandler(JsonObjectMapper jsonObjectMapper) {
+        return new OAuthUserServerAuthenticationFailureHandler(jsonObjectMapper);
     }
 
     @Bean
@@ -113,7 +119,8 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityApplied(
             ServerHttpSecurity httpSecurity,
-            @Qualifier("userRedirectSuccessHandler") ServerAuthenticationSuccessHandler successHandler,
+            @Qualifier("oauth2UserRedirectSuccessHandler") ServerAuthenticationSuccessHandler oauth2SuccessHandler,
+            @Qualifier("oauth2UserRedirectFailureHandler") ServerAuthenticationFailureHandler oauth2FailureHandler,
             LoggingFilter loggingFilter,
             UserAuthorizationTokenFilter tokenFilter,
             @Qualifier("logoutSuccessHandler") ServerLogoutSuccessHandler logoutSuccessHandler
@@ -144,7 +151,8 @@ public class SecurityConfig {
                 .and()
                 .oauth2Login()
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .authenticationSuccessHandler(successHandler)
+                .authenticationSuccessHandler(oauth2SuccessHandler)
+                .authenticationFailureHandler(oauth2FailureHandler)
                 .and()
                 .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN)
                 .addFilterAt(tokenFilter, SecurityWebFiltersOrder.AUTHORIZATION);
