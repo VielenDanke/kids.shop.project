@@ -14,26 +14,37 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.web.server.WebFilterExchange;
-import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-// Need to modified a little bit
-public class UserLogoutSuccessHandler implements ServerLogoutSuccessHandler {
+public class UserLogoutHandler implements ServerLogoutHandler {
 
     private final JwtService<String> jwtService;
     private final JsonObjectMapper jsonObjectMapper;
 
-    public UserLogoutSuccessHandler(JwtService<String> jwtService, JsonObjectMapper jsonObjectMapper) {
+    private ServerWebExchangeMatcher matcher = ServerWebExchangeMatchers.pathMatchers("/logout");
+
+    public UserLogoutHandler(JwtService<String> jwtService, JsonObjectMapper jsonObjectMapper) {
         this.jwtService = jwtService;
         this.jsonObjectMapper = jsonObjectMapper;
     }
 
+
     @Override
-    public Mono<Void> onLogoutSuccess(WebFilterExchange exchange, Authentication authentication) {
+    public Mono<Void> logout(WebFilterExchange exchange, Authentication authentication) {
+        return this.matcher.matches(exchange.getExchange())
+                .filter(ServerWebExchangeMatcher.MatchResult::isMatch)
+                .switchIfEmpty(exchange.getChain().filter(exchange.getExchange()).then(Mono.empty()))
+                .flatMap(matchResult -> this.logoutHandler(exchange, authentication));
+    }
+
+    private Mono<Void> logoutHandler(WebFilterExchange exchange, Authentication authentication) {
         return ReactiveSecurityContextHolder.getContext()
                 .doOnNext(securityContext -> securityContext.getAuthentication().setAuthenticated(false))
                 .then(Mono.just(exchange))
@@ -41,28 +52,25 @@ public class UserLogoutSuccessHandler implements ServerLogoutSuccessHandler {
                     ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
                     ServerHttpRequest request = webFilterExchange.getExchange().getRequest();
 
-                    HttpHeaders headers = request.getHeaders();
+                    HttpHeaders responseHeaders = response.getHeaders();
+                    HttpHeaders requestHeaders = request.getHeaders();
 
-                    List<String> authorizationHeaders = headers.get(HttpHeaders.AUTHORIZATION);
+                    List<String> authorizationHeaderList = requestHeaders.get(HttpHeaders.AUTHORIZATION);
 
-                    if (authorizationHeaders == null) {
-                        return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
+                    if (authorizationHeaderList == null) {
+                        return exchange.getChain().filter(exchange.getExchange());
                     }
-                    String authorizationHeader = authorizationHeaders.get(0);
-
-                    if (!jwtService.validateToken(authorizationHeader)) {
-                        return webFilterExchange.getChain().filter(webFilterExchange.getExchange());
-                    }
+                    String authorizationHeader = authorizationHeaderList.get(0);
 
                     Claims claims = jwtService.extractTokenClaims(authorizationHeader);
 
                     String user = claims.get("user", String.class);
 
-                    User userFromAuthorizationHeader = jsonObjectMapper.deserializeJson(user, User.class);
+                    User userFromJson = jsonObjectMapper.deserializeJson(user, User.class);
 
                     LogoutResponse logoutResponse = new LogoutResponse(
-                            userFromAuthorizationHeader.getId(),
-                            userFromAuthorizationHeader.getUsername()
+                            userFromJson.getId(),
+                            userFromJson.getUsername()
                     );
 
                     DataBufferFactory dataBufferFactory = response.bufferFactory();
@@ -72,11 +80,8 @@ public class UserLogoutSuccessHandler implements ServerLogoutSuccessHandler {
                     DataBuffer wrappedLogoutResponse = dataBufferFactory
                             .wrap(logoutResponseJson.getBytes(StandardCharsets.UTF_8));
 
-                    HttpHeaders responseHeaders = response.getHeaders();
-
-                    responseHeaders.add(HttpHeaders.AUTHORIZATION, "");
-                    responseHeaders.add("Roles", "");
-                    response.setRawStatusCode(200);
+                    responseHeaders.remove(HttpHeaders.AUTHORIZATION);
+                    responseHeaders.remove("Roles");
                     responseHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     return response.writeWith(Flux.just(wrappedLogoutResponse));
