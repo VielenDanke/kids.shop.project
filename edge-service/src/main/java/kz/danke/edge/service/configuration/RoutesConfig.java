@@ -25,10 +25,8 @@ public class RoutesConfig {
                                 .method(HttpMethod.GET)
                                 .and()
                                 .path("/clothes")
-                                .filters(gatewayFilterSpec -> {
-                                    gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig);
-                                    return gatewayFilterSpec;
-                                })
+                                .filters(gatewayFilterSpec ->
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -41,7 +39,7 @@ public class RoutesConfig {
                                         clothByIdFilter -> clothByIdFilter.rewritePath(
                                                 "/clothes/(?<segment>.*)",
                                                 "/clothes/${segment}"
-                                        )
+                                        ).retry(retryConfig -> retryConfig = globalRetryConfig)
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -51,6 +49,13 @@ public class RoutesConfig {
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/clothes")
+                                .filters(gatewayFilterSpec -> {
+                                    gatewayFilterSpec.retry(retryConfig -> {
+                                        retryConfig = globalRetryConfig;
+                                        retryConfig.setMethods(HttpMethod.POST);
+                                    });
+                                    return gatewayFilterSpec;
+                                })
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -63,7 +68,10 @@ public class RoutesConfig {
                                         clothAddFilesFilter -> clothAddFilesFilter.rewritePath(
                                                 "/clothes/(?<segment>.*)/files",
                                                 "/clothes/${segment}/files"
-                                        )
+                                        ).retry(retryConfig -> {
+                                            retryConfig = globalRetryConfig;
+                                            retryConfig.setMethods(HttpMethod.POST);
+                                        })
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -73,6 +81,10 @@ public class RoutesConfig {
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/clothes/searching")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
                                 .uri("lb://cloth-ms")
                 )
                 .build();
