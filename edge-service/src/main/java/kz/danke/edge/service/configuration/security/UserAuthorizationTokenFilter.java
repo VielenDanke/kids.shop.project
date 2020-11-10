@@ -80,7 +80,7 @@ public class UserAuthorizationTokenFilter implements WebFilter {
                     .flatMap(user -> chain.filter(exchange))
                     .switchIfEmpty(
                             Mono.defer(() -> Mono.just(exchange).doOnNext(exc -> exc.getResponse().setRawStatusCode(401))
-                            .flatMap(chain::filter))
+                                    .flatMap(chain::filter))
                     )
                     .onErrorContinue(Exception.class, (ex, obj) -> Mono.defer(() -> {
                         exchange.getResponse().setRawStatusCode(401);

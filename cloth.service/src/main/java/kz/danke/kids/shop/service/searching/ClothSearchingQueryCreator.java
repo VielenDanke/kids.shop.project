@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
@@ -34,8 +35,9 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
             NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder().build();
             return elasticsearchOperations.search(nativeSearchQuery, cClass);
         }
-        long countNonNullFields = Stream.of(searchingObject.getName(), searchingObject.getDescription(), searchingObject.getMaterial())
-                .filter(str -> !StringUtils.isEmpty(str))
+        long countNonNullFields = Stream.of(searchingObject.getName(), searchingObject.getDescription(), searchingObject.getMaterial(),
+                searchingObject.getColor(), searchingObject.getHeight(), searchingObject.getSex(), searchingObject.getAge())
+                .filter(Objects::nonNull)
                 .count();
 
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -48,6 +50,18 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
         }
         if (!StringUtils.isEmpty(searchingObject.getMaterial())) {
             boolQueryBuilder.should(QueryBuilders.regexpQuery("materials.material", wrapWithRegexp(searchingObject.getMaterial())));
+        }
+        if (!StringUtils.isEmpty(searchingObject.getSex())) {
+            boolQueryBuilder.should(QueryBuilders.matchQuery("sex", searchingObject.getSex()));
+        }
+        if (searchingObject.getAge() != null) {
+            boolQueryBuilder.should(QueryBuilders.termQuery("lineSizes.size.age", searchingObject.getAge()));
+        }
+        if (!StringUtils.isEmpty(searchingObject.getHeight())) {
+            boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.size.height", searchingObject.getHeight()));
+        }
+        if (!StringUtils.isEmpty(searchingObject.getColor())) {
+            boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.colorAmount.color", searchingObject.getColor()));
         }
         boolQueryBuilder.minimumShouldMatch((int) countNonNullFields);
 
