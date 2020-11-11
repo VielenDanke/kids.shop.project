@@ -1,16 +1,20 @@
 package kz.danke.kids.shop.document;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.List;
 import java.util.Objects;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class LineSize {
+public class ClothCart {
 
+    private String id;
     private Integer age;
     private String height;
     private String color;
@@ -20,14 +24,12 @@ public class LineSize {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LineSize lineSize = (LineSize) o;
-        return Objects.equals(age, lineSize.age) &&
-                Objects.equals(height, lineSize.height) &&
-                Objects.equals(color, lineSize.color);
+        ClothCart clothCart = (ClothCart) o;
+        return Objects.equals(id, clothCart.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(age, height, color);
+        return Objects.hash(id);
     }
 }

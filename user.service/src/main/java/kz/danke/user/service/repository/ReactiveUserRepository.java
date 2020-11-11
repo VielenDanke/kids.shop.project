@@ -7,4 +7,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface ReactiveUserRepository extends ReactiveElasticsearchRepository<User, String> {
+
+    Mono<User> findByUsername(String username);
 }

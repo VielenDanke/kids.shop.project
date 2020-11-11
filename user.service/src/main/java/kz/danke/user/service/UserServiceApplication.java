@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.tools.agent.ReactorDebugAgent;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -37,6 +38,9 @@ public class UserServiceApplication {
 					.id(UUID.randomUUID().toString())
 					.username("first")
 					.password(passwordEncoder.encode("first"))
+					.phoneNumber("87777777777")
+					.firsName("FirstName")
+					.surname("Surname")
 					.authorities(Collections.singleton("ROLE_USER"))
 					.build();
 
@@ -47,7 +51,7 @@ public class UserServiceApplication {
 	}
 
 	public static void main(String[] args) {
-//		ReactorDebugAgent.init();
+		ReactorDebugAgent.init();
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 

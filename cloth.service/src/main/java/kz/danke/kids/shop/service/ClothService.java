@@ -7,6 +7,7 @@ import org.springframework.http.codec.multipart.Part;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ClothService {
@@ -20,4 +21,6 @@ public interface ClothService {
     Mono<Cloth> addFilesToCloth(List<Part> files, String id);
 
     Flux<Cloth> findAllTextSearching(PublicSearchingObject searchingObject);
+
+    Flux<Cloth> findByIdIn(Collection<String> ids);
 }

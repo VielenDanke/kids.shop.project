@@ -40,6 +40,9 @@ public class ClothRouterConfig {
         ).andRoute(
                 RequestPredicates.POST("/clothes/searching"),
                 clothHandler::handleClothTextSearching
+        ).andRoute(
+                RequestPredicates.POST("/clothes/check"),
+                clothHandler::checkIfAmountEnough
         );
     }
 }

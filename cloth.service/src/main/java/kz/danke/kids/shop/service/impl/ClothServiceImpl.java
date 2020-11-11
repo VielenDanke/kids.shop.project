@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileOwnerAttributeView;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -42,6 +43,11 @@ public class ClothServiceImpl implements ClothService {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
         this.clothTextSearching = clothTextSearching;
         this.properties = properties;
+    }
+
+    @Override
+    public Flux<Cloth> findByIdIn(Collection<String> ids) {
+        return clothReactiveElasticsearchRepositoryImpl.findByIdIn(ids);
     }
 
     @Override

@@ -111,6 +111,17 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(strength);
     }
 
+    @Bean
+    public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper, JwtService<String> jwtService) {
+        ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
+
+        AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
+
+        authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
+
+        return authFilter;
+    }
+
     /*
     Post request on login with headers application/x-www-form-urlencoded
 
@@ -122,8 +133,8 @@ public class SecurityConfig {
             @Qualifier("oauth2UserRedirectSuccessHandler") ServerAuthenticationSuccessHandler oauth2SuccessHandler,
             @Qualifier("oauth2UserRedirectFailureHandler") ServerAuthenticationFailureHandler oauth2FailureHandler,
             @Qualifier("loggingFilter") LoggingFilter loggingFilter,
-            UserAuthorizationTokenFilter tokenFilter,
-            @Qualifier("userLogoutHandler") ServerLogoutHandler userLogoutHandler
+            @Qualifier("userLogoutHandler") ServerLogoutHandler userLogoutHandler,
+            AuthFilter authFilter
     ) {
         httpSecurity
                 .csrf()
@@ -155,7 +166,7 @@ public class SecurityConfig {
                 .authenticationFailureHandler(oauth2FailureHandler)
                 .and()
                 .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN)
-                .addFilterAt(tokenFilter, SecurityWebFiltersOrder.AUTHORIZATION);
+                .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC);
 
         return httpSecurity.build();
     }

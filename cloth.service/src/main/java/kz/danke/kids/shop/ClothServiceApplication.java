@@ -49,32 +49,28 @@ public class ClothServiceApplication {
                                         .lineSizes(Collections.singletonList(
                                                 LineSize
                                                         .builder()
-                                                        .size(Size.builder()
-                                                                .age(6)
-                                                                .height(Height.THIRTY_SIX.height())
-                                                                .build())
-                                                        .colorAmount(ColorAmount.builder()
-                                                                .color("Green")
-                                                                .amount(5)
-                                                                .build())
+                                                        .age(6)
+                                                        .height(Height.THIRTY_SIX.height())
+                                                        .color("Green")
+                                                        .amount(5)
                                                         .build()
                                         ))
                                         .materials(Collections.singletonList(
-                        new Material("cotton", 80)
-                ))
-                        .description("first").build(),
-                        Cloth.builder().id(UUID.randomUUID().toString()).name("name")
-                                .materials(Collections.singletonList(
-                                        new Material("cotton", 80)
-                                )).description("second").build(),
-                        Cloth.builder().id(UUID.randomUUID().toString()).name("name")
-                                .materials(Collections.singletonList(
-                                        new Material("cotton", 80)
-                                )).description("third").build(),
-                        Cloth.builder().id(UUID.randomUUID().toString()).name("name")
-                                .materials(Collections.singletonList(
-                                        new Material("cotton", 80)
-                                )).description("fourth").build()
+                                                new Material("cotton", 80)
+                                        ))
+                                        .description("first").build(),
+                                Cloth.builder().id(UUID.randomUUID().toString()).name("name")
+                                        .materials(Collections.singletonList(
+                                                new Material("cotton", 80)
+                                        )).description("second").build(),
+                                Cloth.builder().id(UUID.randomUUID().toString()).name("name")
+                                        .materials(Collections.singletonList(
+                                                new Material("cotton", 80)
+                                        )).description("third").build(),
+                                Cloth.builder().id(UUID.randomUUID().toString()).name("name")
+                                        .materials(Collections.singletonList(
+                                                new Material("cotton", 80)
+                                        )).description("fourth").build()
                         ))
                         .flatMap(clothReactiveElasticsearchRepositoryImpl::save)
                         .doOnNext(cloth -> System.out.println(cloth.getId()))

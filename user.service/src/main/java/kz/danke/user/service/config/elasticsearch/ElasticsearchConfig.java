@@ -37,7 +37,7 @@ public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfigurat
     public ReactiveElasticsearchClient reactiveElasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(appConfigProperties.getElasticsearch().getHostAndPort())
-                .usingSsl(Objects.requireNonNull(generateSslContext()))
+//                .usingSsl(Objects.requireNonNull(generateSslContext()))
                 .withBasicAuth(
                         appConfigProperties.getElasticsearch().getUsername(),
                         appConfigProperties.getElasticsearch().getPassword()
