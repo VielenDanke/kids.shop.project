@@ -5,5 +5,7 @@ import reactor.core.publisher.Flux;
 
 public interface QueryCreator<T, S> {
 
+    Flux<SearchHit<T>> findAllByIdIn(Class<T> tClass, String... ids);
+
     Flux<SearchHit<T>> findAllTextSearching(S s, Class<T> tClass);
 }

@@ -17,7 +17,6 @@ public class ClothCart {
     private String id;
     private Integer age;
     private String height;
-    private String color;
     private Integer amount;
 
     @Override

@@ -34,6 +34,8 @@ public class Cloth {
     private List<String> images = new ArrayList<>();
     @Field(type = FieldType.Nested, includeInParent = true)
     private List<Material> materials = new ArrayList<>();
+    @Field(type = FieldType.Text, includeInParent = true)
+    private String color;
 
     @Override
     public boolean equals(Object o) {

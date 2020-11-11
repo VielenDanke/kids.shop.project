@@ -8,7 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+//import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Flux;
 
@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 @SpringBootApplication
-@EnableEurekaClient
+//@EnableEurekaClient
 @EnableConfigurationProperties(value = {AppConfigProperties.class})
 public class ClothServiceApplication {
 
@@ -51,14 +51,15 @@ public class ClothServiceApplication {
                                                         .builder()
                                                         .age(6)
                                                         .height(Height.THIRTY_SIX.height())
-                                                        .color("Green")
                                                         .amount(5)
                                                         .build()
                                         ))
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)
                                         ))
-                                        .description("first").build(),
+                                        .description("first")
+                                        .color("Green")
+                                        .build(),
                                 Cloth.builder().id(UUID.randomUUID().toString()).name("name")
                                         .materials(Collections.singletonList(
                                                 new Material("cotton", 80)

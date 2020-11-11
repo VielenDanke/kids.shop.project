@@ -23,10 +23,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -90,21 +88,37 @@ public class ClothHandler {
     public Mono<ServerResponse> checkIfAmountEnough(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(Cart.class)
                 .map(Cart::getClothCartList)
-                .flatMapIterable(clothCarts -> clothCarts)
-                .map(ClothCart::getId)
-                .flatMap(clothService::findById)
-                .map(cloth -> {
-                    LineSize lineSize = cloth.getLineSizes().get(0);
-                    return new ClothCart(
-                            cloth.getId(),
-                            lineSize.getAge(),
-                            lineSize.getHeight(),
-                            lineSize.getColor(),
-                            lineSize.getAmount()
-                    );
-                })
-                .collectList()
-                .map(Cart::new)
-                .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class));
+                .flatMap(clothCartList -> {
+                    String[] ids = clothCartList.stream().map(ClothCart::getId).toArray(String[]::new);
+
+                    return clothService.findByIdIn(ids)
+                            .map(cloth -> {
+                                for (ClothCart cr : clothCartList) {
+                                    if (cr.getId().equals(cloth.getId())) {
+                                        List<LineSize> lineSizes = cloth.getLineSizes();
+
+                                        LineSize lineSize = new LineSize(cr.getAge(), cr.getHeight());
+
+                                        if (!lineSizes.contains(lineSize)) {
+                                            return null;
+                                        }
+                                        int i = lineSizes.indexOf(lineSize);
+                                        LineSize lineSizeFromCloth = lineSizes.get(i);
+                                        if (lineSizeFromCloth.getAmount() - cr.getAmount() < 0) {
+                                            return null;
+                                        }
+                                        lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
+                                        Set<LineSize> lineSizeHashSet = new HashSet<>(lineSizes);
+                                        lineSizeHashSet.add(lineSizeFromCloth);
+                                        cloth.setLineSizes(new ArrayList<>(lineSizeHashSet));
+                                    }
+                                }
+                                return cloth;
+                            })
+                            .filter(Objects::nonNull)
+                            .flatMap(clothService::saveWithoutSetId)
+                            .collectList()
+                            .flatMap(cloths -> ServerResponse.ok().body(Mono.just(cloths), new ParameterizedTypeReference<>() {}));
+                });
     }
 }

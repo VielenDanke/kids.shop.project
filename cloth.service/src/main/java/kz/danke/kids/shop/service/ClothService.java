@@ -16,11 +16,13 @@ public interface ClothService {
 
     Mono<Cloth> save(Cloth cloth);
 
+    Mono<Cloth> saveWithoutSetId(Cloth cloth);
+
     Mono<Cloth> findById(String id);
 
     Mono<Cloth> addFilesToCloth(List<Part> files, String id);
 
     Flux<Cloth> findAllTextSearching(PublicSearchingObject searchingObject);
 
-    Flux<Cloth> findByIdIn(Collection<String> ids);
+    Flux<Cloth> findByIdIn(String... ids);
 }

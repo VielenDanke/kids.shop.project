@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
     private Mono<Cart> checkIfClothEnough(Cart cart) {
         return webClient
                 .post()
-                .uri("http://cloth-ms/clothes/check")
+                .uri("http://cloth-ms/clothes/process-cart")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(cart), Cart.class)

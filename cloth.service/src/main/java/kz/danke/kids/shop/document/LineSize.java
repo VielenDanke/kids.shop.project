@@ -13,8 +13,12 @@ public class LineSize {
 
     private Integer age;
     private String height;
-    private String color;
     private Integer amount;
+
+    public LineSize(Integer age, String height) {
+        this.age = age;
+        this.height = height;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -22,12 +26,11 @@ public class LineSize {
         if (o == null || getClass() != o.getClass()) return false;
         LineSize lineSize = (LineSize) o;
         return Objects.equals(age, lineSize.age) &&
-                Objects.equals(height, lineSize.height) &&
-                Objects.equals(color, lineSize.color);
+                Objects.equals(height, lineSize.height);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(age, height, color);
+        return Objects.hash(age, height);
     }
 }

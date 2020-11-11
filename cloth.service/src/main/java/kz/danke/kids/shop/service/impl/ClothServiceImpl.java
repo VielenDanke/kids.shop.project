@@ -46,8 +46,8 @@ public class ClothServiceImpl implements ClothService {
     }
 
     @Override
-    public Flux<Cloth> findByIdIn(Collection<String> ids) {
-        return clothReactiveElasticsearchRepositoryImpl.findByIdIn(ids);
+    public Flux<Cloth> findByIdIn(String... ids) {
+        return clothTextSearching.findAllByIdIn(Cloth.class, ids).map(SearchHit::getContent);
     }
 
     @Override
@@ -62,6 +62,11 @@ public class ClothServiceImpl implements ClothService {
         return Mono.just(cloth)
                 .doOnNext(cl -> cl.setId(UUID.randomUUID().toString()))
                 .flatMap(clothReactiveElasticsearchRepositoryImpl::save);
+    }
+
+    @Override
+    public Mono<Cloth> saveWithoutSetId(Cloth cloth) {
+        return clothReactiveElasticsearchRepositoryImpl.save(cloth);
     }
 
     @Override

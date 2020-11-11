@@ -9,6 +9,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -27,6 +28,13 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
                                       ClothReactiveElasticsearchRepositoryImpl clothRepository) {
         this.elasticsearchOperations = elasticsearchOperations;
         this.clothRepository = clothRepository;
+    }
+
+    @Override
+    public Flux<SearchHit<Cloth>> findAllByIdIn(Class<Cloth> clothClass, String... ids) {
+        NativeSearchQuery build = new NativeSearchQueryBuilder().withQuery(QueryBuilders.idsQuery().addIds(ids)).build();
+
+        return elasticsearchOperations.search(build, Cloth.class);
     }
 
     @Override
