@@ -1,7 +1,7 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security.jwt;
 
 import io.jsonwebtoken.Claims;
-import kz.danke.user.service.document.User;
+import kz.danke.edge.service.document.User;
 
 public interface JwtService<T> {
 

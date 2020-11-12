@@ -1,6 +1,5 @@
 package kz.danke.user.service.config;
 
-import kz.danke.user.service.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RequestPredicates;

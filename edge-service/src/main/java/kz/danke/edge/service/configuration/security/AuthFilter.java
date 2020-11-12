@@ -34,7 +34,6 @@ public class AuthFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
-        log.info("Filter is happened");
         return this.serverWebExchangeMatcher.matches(serverWebExchange)
                 .filter(ServerWebExchangeMatcher.MatchResult::isMatch)
                 .flatMap(matchResult -> this.authenticationConverter.convert(serverWebExchange))

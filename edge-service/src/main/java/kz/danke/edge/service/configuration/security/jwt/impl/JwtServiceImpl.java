@@ -1,11 +1,12 @@
-package kz.danke.user.service.config.security;
+package kz.danke.edge.service.configuration.security.jwt.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import kz.danke.user.service.config.AppConfigProperties;
-import kz.danke.user.service.document.User;
-import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.edge.service.configuration.AppConfigProperties;
+import kz.danke.edge.service.configuration.security.jwt.JwtService;
+import kz.danke.edge.service.document.User;
+import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

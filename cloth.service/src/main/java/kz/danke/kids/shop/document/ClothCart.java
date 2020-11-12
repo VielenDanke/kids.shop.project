@@ -2,7 +2,6 @@ package kz.danke.kids.shop.document;
 
 import lombok.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @Getter

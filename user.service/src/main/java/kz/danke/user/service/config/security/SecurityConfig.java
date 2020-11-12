@@ -1,5 +1,6 @@
 package kz.danke.user.service.config.security;
 
+import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;

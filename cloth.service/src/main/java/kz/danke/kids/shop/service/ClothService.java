@@ -1,13 +1,11 @@
 package kz.danke.kids.shop.service;
 
 import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import org.springframework.http.codec.multipart.Part;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface ClothService {

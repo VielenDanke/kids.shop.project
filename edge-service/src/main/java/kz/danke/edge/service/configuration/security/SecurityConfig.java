@@ -1,6 +1,6 @@
 package kz.danke.edge.service.configuration.security;
 
-import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import kz.danke.edge.service.service.JsonObjectMapper;

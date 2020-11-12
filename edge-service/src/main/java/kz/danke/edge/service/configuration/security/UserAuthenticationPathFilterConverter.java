@@ -1,6 +1,6 @@
 package kz.danke.edge.service.configuration.security;
 
-import kz.danke.edge.service.configuration.security.service.JwtService;
+import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -1,18 +1,13 @@
-package kz.danke.edge.service.configuration.security.service.impl;
+package kz.danke.user.service.config.security.jwt.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import kz.danke.edge.service.configuration.AppConfigProperties;
-import kz.danke.edge.service.configuration.security.UserDetailsImpl;
-import kz.danke.edge.service.configuration.security.service.JwtService;
-import kz.danke.edge.service.document.User;
-import kz.danke.edge.service.exception.UnknownPrincipalException;
-import kz.danke.edge.service.service.JsonObjectMapper;
+import kz.danke.user.service.config.AppConfigProperties;
+import kz.danke.user.service.config.security.jwt.JwtService;
+import kz.danke.user.service.document.User;
+import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;

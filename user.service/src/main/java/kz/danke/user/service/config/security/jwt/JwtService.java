@@ -1,8 +1,7 @@
-package kz.danke.edge.service.configuration.security.service;
+package kz.danke.user.service.config.security.jwt;
 
 import io.jsonwebtoken.Claims;
-import kz.danke.edge.service.document.User;
-import org.springframework.security.core.Authentication;
+import kz.danke.user.service.document.User;
 
 public interface JwtService<T> {
 
