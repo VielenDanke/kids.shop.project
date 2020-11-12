@@ -111,13 +111,16 @@ public class SecurityConfig {
                                  JwtService<String> jwtService
     ) {
         ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
+        UserServerAuthenticationFailureHandler serverAuthenticationFailureHandler = new UserServerAuthenticationFailureHandler();
+
+        serverAuthenticationFailureHandler.setJsonObjectMapper(jsonObjectMapper);
 
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
 
         authFilter.setServerWebExchangeMatherWithPathMatchers(
                 "/cart/process"
         );
-
+        authFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
         authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
 
         return authFilter;
