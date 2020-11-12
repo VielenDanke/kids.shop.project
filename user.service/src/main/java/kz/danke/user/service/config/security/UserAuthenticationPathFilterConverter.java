@@ -1,5 +1,6 @@
 package kz.danke.user.service.config.security;
 
+import io.jsonwebtoken.Claims;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +27,10 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
     @Override
     public Mono<Authentication> convert(ServerWebExchange exchange) {
         String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+        boolean b = jwtService.validateToken(authorization);
+        Claims claims1 = jwtService.extractTokenClaims(authorization);
+        String user1 = claims1.get("user", String.class);
+        User user2 = jsonObjectMapper.deserializeJson(user1, User.class);
 
         return Mono.just(exchange.getRequest().getHeaders())
                 .filter(Objects::nonNull)
@@ -33,7 +38,7 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
                 .map(headers -> headers.getFirst("Authorization"))
                 .filter(jwtService::validateToken)
                 .map(jwtService::extractTokenClaims)
-                .map(claims -> claims.get("user"))
+                .map(claims -> claims.get("user", String.class))
                 .map(userClaims -> jsonObjectMapper.deserializeJson((String) userClaims, User.class))
                 .map(user -> new UsernamePasswordAuthenticationToken(
                         user.getUsername(),

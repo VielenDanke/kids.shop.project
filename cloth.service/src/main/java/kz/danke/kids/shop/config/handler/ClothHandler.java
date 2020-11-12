@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 import java.io.IOException;
 import java.util.*;
@@ -91,7 +92,7 @@ public class ClothHandler {
                 .flatMap(clothCartList -> {
                     String[] ids = clothCartList.stream().map(ClothCart::getId).toArray(String[]::new);
 
-                    return clothService.findByIdIn(ids)
+                    Mono<List<String>> idsList = clothService.findByIdIn(ids)
                             .map(cloth -> {
                                 for (ClothCart cr : clothCartList) {
                                     if (cr.getId().equals(cloth.getId())) {
@@ -117,8 +118,21 @@ public class ClothHandler {
                             })
                             .filter(Objects::nonNull)
                             .flatMap(clothService::saveWithoutSetId)
+                            .map(Cloth::getId)
+                            .collectList();
+
+                    return Flux.fromIterable(clothCartList)
+                            .zipWith(idsList)
+                            .filter(tuple -> {
+                                List<String> clothIds = tuple.getT2();
+                                ClothCart clothCart = tuple.getT1();
+
+                                return clothIds.contains(clothCart.getId());
+                            })
+                            .map(Tuple2::getT1)
                             .collectList()
-                            .flatMap(cloths -> ServerResponse.ok().body(Mono.just(cloths), new ParameterizedTypeReference<>() {}));
+                            .map(Cart::new)
+                            .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class));
                 });
     }
 }

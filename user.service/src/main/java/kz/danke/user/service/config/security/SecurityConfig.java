@@ -34,18 +34,16 @@ public class SecurityConfig {
                 .authorizeExchange()
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
-                .pathMatchers("/**")
-                .permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
+                .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC)
                 .httpBasic()
                 .disable()
                 .formLogin()
                 .disable()
                 .logout()
-                .disable()
-                .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC);
+                .disable();
 
         return httpSecurity.build();
     }

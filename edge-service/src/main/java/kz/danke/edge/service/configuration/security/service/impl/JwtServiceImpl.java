@@ -53,7 +53,7 @@ public class JwtServiceImpl implements JwtService<String> {
     public boolean validateToken(String token) {
         return extractTokenClaims(token)
                 .getExpiration()
-                .before(new Date());
+                .after(new Date());
     }
 
     @Override

@@ -5,7 +5,6 @@ import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
-import kz.danke.edge.service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
@@ -23,14 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
-import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
-import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -112,10 +107,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper, JwtService<String> jwtService) {
+    public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper,
+                                 JwtService<String> jwtService
+    ) {
         ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
 
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
+
+        authFilter.setServerWebExchangeMatherWithPathMatchers(
+                "/cart/process"
+        );
 
         authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
 
@@ -153,6 +154,7 @@ public class SecurityConfig {
                 .anyExchange()
                 .authenticated()
                 .and()
+                .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC)
                 .httpBasic()
                 .disable()
                 .formLogin()
@@ -165,8 +167,7 @@ public class SecurityConfig {
                 .authenticationSuccessHandler(oauth2SuccessHandler)
                 .authenticationFailureHandler(oauth2FailureHandler)
                 .and()
-                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN)
-                .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC);
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN);
 
         return httpSecurity.build();
     }

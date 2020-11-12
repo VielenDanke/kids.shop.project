@@ -87,6 +87,18 @@ public class RoutesConfig {
                                 }))
                                 .uri("lb://cloth-ms")
                 )
+                .route(
+                        "user-cart-process",
+                        userCartProcess -> userCartProcess
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/cart/process")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
+                                .uri("lb://user-ms")
+                )
                 .build();
     }
 }

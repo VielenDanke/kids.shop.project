@@ -24,7 +24,7 @@ public class AuthFilter implements WebFilter {
 
     private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
     private ServerAuthenticationConverter authenticationConverter = new ServerFormLoginAuthenticationConverter();
-    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/**");
+    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/cart/process");
     private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new WebFilterChainServerAuthenticationSuccessHandler();
     private ServerAuthenticationFailureHandler authenticationFailureHandler = new RedirectServerAuthenticationFailureHandler("/login?error");
 
@@ -59,6 +59,10 @@ public class AuthFilter implements WebFilter {
                 .then(this.authenticationSuccessHandler
                         .onAuthenticationSuccess(webFilterExchange, authentication))
                 .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+    }
+
+    public void setServerWebExchangeMatherWithPathMatchers(String... pathMatchers) {
+        this.serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers(pathMatchers);
     }
 
     public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {
