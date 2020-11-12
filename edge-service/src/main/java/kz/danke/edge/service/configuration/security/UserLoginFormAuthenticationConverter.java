@@ -1,42 +1,32 @@
 package kz.danke.edge.service.configuration.security;
 
+import kz.danke.edge.service.dto.request.LoginRequest;
+import kz.danke.edge.service.exception.EmptyLoginRequestBodyException;
+import kz.danke.edge.service.exception.ParseLoginRequestException;
+import kz.danke.edge.service.service.JsonObjectMapper;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 public class UserLoginFormAuthenticationConverter implements ServerAuthenticationConverter {
 
-    private String usernameFieldName = "username";
-    private String passwordFieldName = "password";
+    private final JsonObjectMapper jsonObjectMapper = new JsonObjectMapper();
 
     @Override
     public Mono<Authentication> convert(ServerWebExchange exchange) {
         return exchange
-                .getFormData()
-                .map(this::createAuthentication);
-    }
-
-    private Authentication createAuthentication(MultiValueMap<String, String> stringStringMultiValueMap) {
-        return new UsernamePasswordAuthenticationToken(
-                stringStringMultiValueMap.getFirst(usernameFieldName),
-                stringStringMultiValueMap.getFirst(passwordFieldName)
-        );
-    }
-
-    private Authentication createAuthentication(String username, String password) {
-        return new UsernamePasswordAuthenticationToken(
-                username, password
-        );
-    }
-
-    public void setUsernameFieldName(String usernameFieldName) {
-        this.usernameFieldName = usernameFieldName;
-    }
-
-    public void setPasswordFieldName(String passwordFieldName) {
-        this.passwordFieldName = passwordFieldName;
+                .getRequest()
+                .getBody()
+                .map(DataBuffer::asInputStream)
+                .singleOrEmpty()
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyLoginRequestBodyException("Body request login is empty"))))
+                .map(inputStream -> jsonObjectMapper.deserializeInputStream(inputStream, LoginRequest.class))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ParseLoginRequestException("Cannot parse login request"))))
+                .map(loginRequest ->
+                        new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+                );
     }
 }

@@ -126,11 +126,6 @@ public class SecurityConfig {
         return authFilter;
     }
 
-    /*
-    Post request on login with headers application/x-www-form-urlencoded
-
-    because getFormData method on ServerWebRequest can read only with this header
-     */
     @Bean
     public SecurityWebFilterChain securityApplied(
             ServerHttpSecurity httpSecurity,

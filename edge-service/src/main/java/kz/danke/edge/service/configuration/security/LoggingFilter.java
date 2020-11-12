@@ -1,5 +1,7 @@
 package kz.danke.edge.service.configuration.security;
 
+import kz.danke.edge.service.exception.EmptyLoginRequestBodyException;
+import kz.danke.edge.service.exception.ParseLoginRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -40,9 +42,12 @@ public class LoggingFilter implements WebFilter {
                 .flatMap(matchResult -> this.authenticationConverter.convert(serverWebExchange))
                 .switchIfEmpty(webFilterChain.filter(serverWebExchange).then(Mono.empty()))
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
-                .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
-                        new WebFilterExchange(serverWebExchange, webFilterChain), e
-                ));
+                .onErrorResume(ex -> ex.getClass().isAssignableFrom(AuthenticationException.class) ||
+                                ex.getClass().isAssignableFrom(EmptyLoginRequestBodyException.class) ||
+                                ex.getClass().isAssignableFrom(ParseLoginRequestException.class),
+                        (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                                new WebFilterExchange(serverWebExchange, webFilterChain), (AuthenticationException) e
+                        ));
     }
 
     private Mono<Void> authenticate(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain, Authentication authentication) {
