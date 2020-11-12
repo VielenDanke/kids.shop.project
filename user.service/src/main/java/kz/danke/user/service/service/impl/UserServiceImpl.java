@@ -1,8 +1,11 @@
 package kz.danke.user.service.service.impl;
 
 import kz.danke.user.service.document.Cart;
+import kz.danke.user.service.document.ClothCart;
 import kz.danke.user.service.document.User;
+import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
+import kz.danke.user.service.exception.UserNotFoundException;
 import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,26 +30,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<Cart> processCartShop(Cart cart) {
-        Mono<User> userMono = getPrincipalFromSecurityContext()
-                .flatMap(reactiveUserRepository::findByUsername);
-
-        Mono<Cart> cartMono = this.checkIfClothEnough(cart);
-
-        return cartMono
-                .zipWith(userMono)
-                .flatMap(tuple -> {
-                    Cart userCart = tuple.getT1();
-                    User userInContext = tuple.getT2();
-
-                    userInContext.setCart(userCart);
-
-                    return reactiveUserRepository.save(userInContext);
-                })
-                .map(User::getCart);
+    public Mono<Cart> validateCartShop(Cart cart) {
+        return getPrincipalFromSecurityContext()
+                .flatMap(reactiveUserRepository::findByUsername)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotFoundException("User not found"))))
+                .then(this.getOnlyEnoughClothAmount(cart));
     }
 
-    private Mono<Cart> checkIfClothEnough(Cart cart) {
+    @Override
+    public Mono<Integer> processCartShop(Cart cart, ChargeRequest chargeRequest) {
+        return Mono.justOrEmpty(cart)
+                .flatMapIterable(Cart::getClothCartList)
+                .map(ClothCart::getPrice)
+                .reduce(Integer::sum);
+    }
+
+    private Mono<Cart> getOnlyEnoughClothAmount(Cart cart) {
         return webClient
                 .post()
                 .uri("http://cloth-ms/clothes/process-cart")

@@ -1,5 +1,6 @@
 package kz.danke.user.service.document;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -12,5 +13,6 @@ import java.util.List;
 @Builder
 public class Cart {
 
-    List<ClothCart> clothCartList = new ArrayList<>();
+    private List<ClothCart> clothCartList = new ArrayList<>();
+
 }

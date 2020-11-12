@@ -103,17 +103,12 @@ public class ClothHandler {
                                         if (lineSizeFromCloth.getAmount() - cr.getAmount() < 0) {
                                             return null;
                                         }
-                                        lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
-                                        Set<LineSize> lineSizeHashSet = new HashSet<>(lineSizes);
-                                        lineSizeHashSet.add(lineSizeFromCloth);
-                                        cloth.setLineSizes(new ArrayList<>(lineSizeHashSet));
                                     }
                                 }
                                 return cloth;
                             })
                             .filter(Objects::nonNull)
                             .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotEnoughAmountException("Not enough cloth, cart empty"))))
-                            .flatMap(clothService::saveWithoutSetId)
                             .map(Cloth::getId)
                             .collectList();
 

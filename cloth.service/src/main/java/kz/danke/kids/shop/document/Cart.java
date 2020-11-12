@@ -12,5 +12,5 @@ import java.util.List;
 @Builder
 public class Cart {
 
-    List<ClothCart> clothCartList = new ArrayList<>();
+    private List<ClothCart> clothCartList = new ArrayList<>();
 }

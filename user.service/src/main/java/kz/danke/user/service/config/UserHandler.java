@@ -22,7 +22,7 @@ public class UserHandler {
 
     public Mono<ServerResponse> handleCartProcess(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(Cart.class)
-                .flatMap(userService::processCartShop)
+                .flatMap(userService::validateCartShop)
                 .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class))
                 .onErrorResume(UserNotAuthorizedException.class, ex -> ServerResponse
                         .status(401)

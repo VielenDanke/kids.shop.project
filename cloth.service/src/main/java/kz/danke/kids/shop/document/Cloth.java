@@ -36,6 +36,8 @@ public class Cloth {
     private List<Material> materials = new ArrayList<>();
     @Field(type = FieldType.Text, includeInParent = true)
     private String color;
+    @Field(type = FieldType.Integer, includeInParent = true)
+    private Integer price;
 
     @Override
     public boolean equals(Object o) {
