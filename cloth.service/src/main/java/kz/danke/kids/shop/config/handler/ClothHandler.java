@@ -7,6 +7,7 @@ import kz.danke.kids.shop.document.LineSize;
 import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
+import kz.danke.kids.shop.exceptions.ClothNotEnoughAmountException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
@@ -117,6 +118,7 @@ public class ClothHandler {
                                 return cloth;
                             })
                             .filter(Objects::nonNull)
+                            .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotEnoughAmountException("Not enough cloth, cart empty"))))
                             .flatMap(clothService::saveWithoutSetId)
                             .map(Cloth::getId)
                             .collectList();
@@ -132,7 +134,15 @@ public class ClothHandler {
                             .map(Tuple2::getT1)
                             .collectList()
                             .map(Cart::new)
-                            .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class));
+                            .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class))
+                            .onErrorResume(ClothNotEnoughAmountException.class, ex ->
+                                    ServerResponse.status(404).body(
+                                            Mono.just(new ResponseFailed(
+                                                    ex.getLocalizedMessage(),
+                                                    ex.toString()
+                                            )), ResponseFailed.class
+                                    )
+                            );
                 });
     }
 }
