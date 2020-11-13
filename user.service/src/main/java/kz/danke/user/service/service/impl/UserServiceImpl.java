@@ -4,11 +4,13 @@ import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
+import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.exception.UserNotFoundException;
 import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -49,8 +51,17 @@ public class UserServiceImpl implements UserService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(cart), Cart.class)
-                .retrieve()
-                .bodyToMono(Cart.class);
+                .exchange()
+                .flatMap(clientResponse -> {
+                    HttpStatus httpStatus = clientResponse.statusCode();
+
+                    if (!httpStatus.equals(HttpStatus.OK)) {
+                        return Mono.defer(() -> Mono.error(new ClothCartNotFoundException(
+                                "Cloth in cart not found", clientResponse.rawStatusCode()))
+                        );
+                    }
+                    return clientResponse.bodyToMono(Cart.class);
+                });
     }
 
     private Mono<User> getPrincipalFromSecurityContext() {
