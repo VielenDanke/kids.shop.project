@@ -56,6 +56,7 @@ public class ClothServiceApplication {
                                     ))
                                     .description("first description")
                                     .color("Orange")
+                                    .price(1200)
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("second")
@@ -73,6 +74,7 @@ public class ClothServiceApplication {
                                     ))
                                     .description("second description")
                                     .color("Grey")
+                                    .price(2500)
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("third")
@@ -90,6 +92,7 @@ public class ClothServiceApplication {
                                     ))
                                     .description("third description")
                                     .color("Green")
+                                    .price(3700)
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("fourth")
@@ -107,6 +110,7 @@ public class ClothServiceApplication {
                                     ))
                                     .description("fourth description")
                                     .color("Red")
+                                    .price(4500)
                                     .build()
                     ))
                     .flatMap(clothReactiveElasticsearchRepositoryImpl::save)

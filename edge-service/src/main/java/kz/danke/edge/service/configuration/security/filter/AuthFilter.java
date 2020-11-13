@@ -18,6 +18,9 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 public class AuthFilter implements WebFilter {
 
@@ -62,9 +65,18 @@ public class AuthFilter implements WebFilter {
     }
 
     public void setServerWebExchangeMatherWithPathMatchers(String[] getMatchers, String[] postMatchers) {
-        ServerWebExchangeMatcher getMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, getMatchers);
-        ServerWebExchangeMatcher postMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, postMatchers);
-        this.serverWebExchangeMatcher = ServerWebExchangeMatchers.matchers(getMatcher, postMatcher);
+        List<ServerWebExchangeMatcher> matchers = new ArrayList<>();
+        if (getMatchers.length != 0) {
+            ServerWebExchangeMatcher getMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, getMatchers);
+            matchers.add(getMatcher);
+        }
+        if (postMatchers.length != 0) {
+            ServerWebExchangeMatcher postMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, postMatchers);
+            matchers.add(postMatcher);
+        }
+        this.serverWebExchangeMatcher = ServerWebExchangeMatchers.matchers(
+                matchers.toArray(ServerWebExchangeMatcher[]::new)
+        );
     }
 
     public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {

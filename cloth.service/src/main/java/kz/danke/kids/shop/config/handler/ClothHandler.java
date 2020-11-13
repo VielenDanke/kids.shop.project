@@ -8,11 +8,13 @@ import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
 import kz.danke.kids.shop.exceptions.ClothNotEnoughAmountException;
+import kz.danke.kids.shop.exceptions.ClothNotFoundException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -49,7 +51,7 @@ public class ClothHandler {
                         .build()
                 ).flatMap(clothSaveResponse -> ServerResponse.ok().body(Mono.just(clothSaveResponse), ClothSaveResponse.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
-                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString())),
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class)
                 );
     }
@@ -62,7 +64,7 @@ public class ClothHandler {
                 .flatMap(partList -> clothService.addFilesToCloth(partList, id))
                 .flatMap(cloth -> ServerResponse.ok().body(Mono.just("Files successfully added"), String.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
-                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString())),
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class
                         )
                 );
@@ -76,7 +78,7 @@ public class ClothHandler {
                 .flatMap(clothDTOS -> ServerResponse.ok().body(Mono.just(clothDTOS), ClothDTO.class))
                 .onErrorResume(Exception.class, ex ->
                         ServerResponse.badRequest().body(Mono.just(
-                                new ResponseFailed(ex.getLocalizedMessage(), ex.toString())
+                                new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                         ), ResponseFailed.class)
                 );
     }
@@ -128,10 +130,37 @@ public class ClothHandler {
                                     ServerResponse.status(404).body(
                                             Mono.just(new ResponseFailed(
                                                     ex.getLocalizedMessage(),
-                                                    ex.toString()
+                                                    ex.toString(),
+                                                    serverRequest.path()
                                             )), ResponseFailed.class
                                     )
                             );
                 });
+    }
+
+    public Mono<ServerResponse> handleMainPageClothes(ServerRequest serverRequest) {
+        return clothService
+                .findAll()
+                .map(ClothDTO::toClothDTO)
+                .collectList()
+                .flatMap(clothDTOS -> ServerResponse.ok().body(Mono.just(clothDTOS), ClothDTO.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
+                        Mono.just(
+                                new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                        ), ResponseFailed.class
+                ));
+
+    }
+
+    public Mono<ServerResponse> handleClothById(ServerRequest serverRequest) {
+        return ServerResponse.ok().body(
+                clothService.findById(serverRequest.pathVariable("id")), Cloth.class
+        ).onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
+                .status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path()),
+                        ResponseFailed.class
+                )
+        );
     }
 }

@@ -22,15 +22,10 @@ public class ClothRouterConfig {
     ) {
         return RouterFunctions.route(
                 RequestPredicates.GET("/clothes"),
-                serverRequest -> ServerResponse.ok().body(clothService.findAll(), Cloth.class)
+                clothHandler::handleMainPageClothes
         ).andRoute(
                 RequestPredicates.GET("/clothes/{id}"),
-                serverRequest -> ServerResponse.ok().body(
-                        clothService.findById(serverRequest.pathVariable("id")), Cloth.class
-                ).onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
-                        .status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseFailed(ex.getLocalizedMessage(), ex.toString()), ResponseFailed.class)
-                )
+                clothHandler::handleClothById
         ).andRoute(
                 RequestPredicates.POST("/clothes"),
                 clothHandler::handleClothSaving

@@ -11,13 +11,11 @@ public class ResponseFailed {
 
     private String description;
     private String type;
+    private String path;
 
-    public ResponseFailed(String description, String type) {
-        this.description = description;
+    public ResponseFailed(String description, String type, String path) {
+        this.description = !StringUtils.isEmpty(description) ? description : "Something went wrong";
         this.type = type;
-    }
-
-    private String handleDescription(String description) {
-        return !StringUtils.isEmpty(description) ? description : "Something went wrong";
+        this.path = path;
     }
 }

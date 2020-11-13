@@ -19,40 +19,7 @@ import java.util.UUID;
 @EnableConfigurationProperties(value = {AppConfigProperties.class})
 public class UserServiceApplication {
 
-	private final ReactiveUserRepository reactiveUserRepository;
-	private final PasswordEncoder passwordEncoder;
-
-	@Autowired
-	public UserServiceApplication(ReactiveUserRepository reactiveUserRepository,
-								  PasswordEncoder passwordEncoder) {
-		this.reactiveUserRepository = reactiveUserRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
-
-	@Bean
-	public CommandLineRunner lineRunner() {
-		return args -> {
-			reactiveUserRepository.deleteAll().block();
-
-			User user = User.builder()
-					.id(UUID.randomUUID().toString())
-					.username("first")
-					.password(passwordEncoder.encode("first"))
-					.phoneNumber("87777777777")
-					.firsName("FirstName")
-					.surname("Surname")
-					.authorities(Collections.singleton("ROLE_USER"))
-					.build();
-
-			User block = reactiveUserRepository.save(user).block();
-
-			System.out.println(block.getId());
-		};
-	}
-
 	public static void main(String[] args) {
-		ReactorDebugAgent.init();
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
-
 }
