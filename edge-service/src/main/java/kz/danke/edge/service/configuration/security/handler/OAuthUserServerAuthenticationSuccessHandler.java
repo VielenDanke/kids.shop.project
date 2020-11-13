@@ -1,4 +1,4 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.handler;
 
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.Authorities;

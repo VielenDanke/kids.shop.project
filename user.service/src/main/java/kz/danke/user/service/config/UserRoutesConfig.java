@@ -14,8 +14,12 @@ public class UserRoutesConfig {
     public RouterFunction<ServerResponse> userRoutes(UserHandler userHandler) {
         return RouterFunctions
                 .route(
-                        RequestPredicates.POST("/cart/process"),
+                        RequestPredicates.POST("/cart/validate"),
                         userHandler::handleCartProcess
+                )
+                .andRoute(
+                        RequestPredicates.POST("/cart/process"),
+                        userHandler::handleChargeProcess
                 );
     }
 }

@@ -1,4 +1,4 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.handler;
 
 import kz.danke.edge.service.exception.ResponseFailed;
 import kz.danke.edge.service.service.JsonObjectMapper;

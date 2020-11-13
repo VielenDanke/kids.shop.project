@@ -1,8 +1,7 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.filter;
 
-import kz.danke.edge.service.exception.EmptyLoginRequestBodyException;
-import kz.danke.edge.service.exception.ParseLoginRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -20,17 +19,17 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-public class LoggingFilter implements WebFilter {
+public class AuthFilter implements WebFilter {
 
     private final ReactiveAuthenticationManager reactiveAuthenticationManager;
 
     private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
-    private ServerAuthenticationConverter authenticationConverter = new UserLoginFormAuthenticationConverter();
-    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/auth/login");
-    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new RedirectServerAuthenticationSuccessHandler("/");
+    private ServerAuthenticationConverter authenticationConverter = new ServerFormLoginAuthenticationConverter();
+    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/cart/process");
+    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new WebFilterChainServerAuthenticationSuccessHandler();
     private ServerAuthenticationFailureHandler authenticationFailureHandler = new RedirectServerAuthenticationFailureHandler("/login?error");
 
-    public LoggingFilter(ReactiveAuthenticationManager reactiveAuthenticationManager) {
+    public AuthFilter(ReactiveAuthenticationManager reactiveAuthenticationManager) {
         this.reactiveAuthenticationManager = reactiveAuthenticationManager;
     }
 
@@ -41,12 +40,9 @@ public class LoggingFilter implements WebFilter {
                 .flatMap(matchResult -> this.authenticationConverter.convert(serverWebExchange))
                 .switchIfEmpty(webFilterChain.filter(serverWebExchange).then(Mono.empty()))
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
-                .onErrorResume(ex -> ex.getClass().isAssignableFrom(AuthenticationException.class) ||
-                                ex.getClass().isAssignableFrom(EmptyLoginRequestBodyException.class) ||
-                                ex.getClass().isAssignableFrom(ParseLoginRequestException.class),
-                        (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
-                                new WebFilterExchange(serverWebExchange, webFilterChain), (AuthenticationException) e
-                        ));
+                .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                        new WebFilterExchange(serverWebExchange, webFilterChain), e
+                ));
     }
 
     private Mono<Void> authenticate(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain, Authentication authentication) {
@@ -63,6 +59,12 @@ public class LoggingFilter implements WebFilter {
                 .then(this.authenticationSuccessHandler
                         .onAuthenticationSuccess(webFilterExchange, authentication))
                 .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+    }
+
+    public void setServerWebExchangeMatherWithPathMatchers(String[] getMatchers, String[] postMatchers) {
+        ServerWebExchangeMatcher getMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, getMatchers);
+        ServerWebExchangeMatcher postMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, postMatchers);
+        this.serverWebExchangeMatcher = ServerWebExchangeMatchers.matchers(getMatcher, postMatcher);
     }
 
     public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {

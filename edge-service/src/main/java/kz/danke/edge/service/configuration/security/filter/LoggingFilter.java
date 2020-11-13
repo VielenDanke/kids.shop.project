@@ -1,5 +1,8 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.filter;
 
+import kz.danke.edge.service.configuration.security.converter.UserLoginFormAuthenticationConverter;
+import kz.danke.edge.service.exception.EmptyLoginRequestBodyException;
+import kz.danke.edge.service.exception.ParseLoginRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -18,17 +21,17 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-public class AuthFilter implements WebFilter {
+public class LoggingFilter implements WebFilter {
 
     private final ReactiveAuthenticationManager reactiveAuthenticationManager;
 
     private ServerSecurityContextRepository securityContextRepository = NoOpServerSecurityContextRepository.getInstance();
-    private ServerAuthenticationConverter authenticationConverter = new ServerFormLoginAuthenticationConverter();
-    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/cart/process");
-    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new WebFilterChainServerAuthenticationSuccessHandler();
+    private ServerAuthenticationConverter authenticationConverter = new UserLoginFormAuthenticationConverter();
+    private ServerWebExchangeMatcher serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers("/auth/login");
+    private ServerAuthenticationSuccessHandler authenticationSuccessHandler = new RedirectServerAuthenticationSuccessHandler("/");
     private ServerAuthenticationFailureHandler authenticationFailureHandler = new RedirectServerAuthenticationFailureHandler("/login?error");
 
-    public AuthFilter(ReactiveAuthenticationManager reactiveAuthenticationManager) {
+    public LoggingFilter(ReactiveAuthenticationManager reactiveAuthenticationManager) {
         this.reactiveAuthenticationManager = reactiveAuthenticationManager;
     }
 
@@ -39,9 +42,12 @@ public class AuthFilter implements WebFilter {
                 .flatMap(matchResult -> this.authenticationConverter.convert(serverWebExchange))
                 .switchIfEmpty(webFilterChain.filter(serverWebExchange).then(Mono.empty()))
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
-                .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
-                        new WebFilterExchange(serverWebExchange, webFilterChain), e
-                ));
+                .onErrorResume(ex -> ex.getClass().isAssignableFrom(AuthenticationException.class) ||
+                                ex.getClass().isAssignableFrom(EmptyLoginRequestBodyException.class) ||
+                                ex.getClass().isAssignableFrom(ParseLoginRequestException.class),
+                        (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                                new WebFilterExchange(serverWebExchange, webFilterChain), (AuthenticationException) e
+                        ));
     }
 
     private Mono<Void> authenticate(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain, Authentication authentication) {
@@ -58,10 +64,6 @@ public class AuthFilter implements WebFilter {
                 .then(this.authenticationSuccessHandler
                         .onAuthenticationSuccess(webFilterExchange, authentication))
                 .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
-    }
-
-    public void setServerWebExchangeMatherWithPathMatchers(String... pathMatchers) {
-        this.serverWebExchangeMatcher = ServerWebExchangeMatchers.pathMatchers(pathMatchers);
     }
 
     public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {

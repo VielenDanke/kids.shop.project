@@ -1,9 +1,9 @@
 package kz.danke.user.service.service.impl;
 
 import kz.danke.user.service.document.Cart;
-import kz.danke.user.service.document.ClothCart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
+import kz.danke.user.service.dto.response.ChargeResponse;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.exception.UserNotFoundException;
 import kz.danke.user.service.repository.ReactiveUserRepository;
@@ -32,23 +32,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Cart> validateCartShop(Cart cart) {
         return getPrincipalFromSecurityContext()
-                .flatMap(reactiveUserRepository::findByUsername)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotFoundException("User not found"))))
                 .then(this.getOnlyEnoughClothAmount(cart));
     }
 
     @Override
-    public Mono<Integer> processCartShop(Cart cart, ChargeRequest chargeRequest) {
-        return Mono.justOrEmpty(cart)
-                .flatMapIterable(Cart::getClothCartList)
-                .map(ClothCart::getPrice)
-                .reduce(Integer::sum);
+    public Mono<ChargeResponse> processCartShop(ChargeRequest chargeRequest) {
+        return getPrincipalFromSecurityContext()
+                .then(Mono.just(new ChargeResponse("Transaction complete successfully")));
+
     }
 
     private Mono<Cart> getOnlyEnoughClothAmount(Cart cart) {
         return webClient
                 .post()
-                .uri("http://cloth-ms/clothes/process-cart")
+                .uri("http://cloth-ms/clothes/validate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(cart), Cart.class)
@@ -56,12 +53,14 @@ public class UserServiceImpl implements UserService {
                 .bodyToMono(Cart.class);
     }
 
-    private Mono<String> getPrincipalFromSecurityContext() {
+    private Mono<User> getPrincipalFromSecurityContext() {
         return ReactiveSecurityContextHolder.getContext()
                 .filter(c -> c.getAuthentication() != null)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotAuthorizedException("Security context not found"))))
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
-                .cast(String.class);
+                .cast(String.class)
+                .flatMap(reactiveUserRepository::findByUsername)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotFoundException("User not found"))));
     }
 }

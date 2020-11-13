@@ -1,4 +1,4 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.converter;
 
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.User;

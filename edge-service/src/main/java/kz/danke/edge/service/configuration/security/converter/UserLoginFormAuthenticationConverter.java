@@ -1,4 +1,4 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.converter;
 
 import kz.danke.edge.service.dto.request.LoginRequest;
 import kz.danke.edge.service.exception.EmptyLoginRequestBodyException;

@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 @ToString
 public class UserDetailsImpl implements UserDetails {
 
-    private User user;
-    private Set<? extends GrantedAuthority> authorities;
+    private final User user;
+    private final Set<? extends GrantedAuthority> authorities;
 
     private UserDetailsImpl(User user, Set<? extends GrantedAuthority> authorities) {
         this.user = user;

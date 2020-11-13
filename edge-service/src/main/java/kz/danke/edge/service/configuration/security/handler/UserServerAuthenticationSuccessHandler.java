@@ -1,5 +1,6 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.handler;
 
+import kz.danke.edge.service.configuration.security.UserDetailsImpl;
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.dto.response.LoginResponse;
 import kz.danke.edge.service.repository.ReactiveUserRepository;

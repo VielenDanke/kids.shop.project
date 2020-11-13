@@ -1,5 +1,9 @@
 package kz.danke.edge.service.configuration.security;
 
+import kz.danke.edge.service.configuration.security.converter.UserAuthenticationPathFilterConverter;
+import kz.danke.edge.service.configuration.security.filter.AuthFilter;
+import kz.danke.edge.service.configuration.security.filter.LoggingFilter;
+import kz.danke.edge.service.configuration.security.handler.*;
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
@@ -117,9 +121,15 @@ public class SecurityConfig {
 
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
 
-        authFilter.setServerWebExchangeMatherWithPathMatchers(
-                "/cart/process"
-        );
+        String[] getMatchers = new String[]{};
+        String[] postMatchers = new String[]{
+                "/cart/validate",
+                "/cart/process",
+                "/clothes/*/files",
+                "/clothes"
+        };
+
+        authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers);
         authFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
         authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
 
@@ -148,6 +158,7 @@ public class SecurityConfig {
                 .pathMatchers("/oauth2/user/registration").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
+                .pathMatchers(HttpMethod.POST, "/clothes").hasRole(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasRole(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()
                 .authenticated()

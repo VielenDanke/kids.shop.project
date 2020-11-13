@@ -17,7 +17,6 @@ public class ClothCart {
     private Integer age;
     private String height;
     private Integer amount;
-    private Integer price;
 
     @Override
     public boolean equals(Object o) {

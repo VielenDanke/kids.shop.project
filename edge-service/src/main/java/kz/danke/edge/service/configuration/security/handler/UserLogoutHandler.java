@@ -1,4 +1,4 @@
-package kz.danke.edge.service.configuration.security;
+package kz.danke.edge.service.configuration.security.handler;
 
 import io.jsonwebtoken.Claims;
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
