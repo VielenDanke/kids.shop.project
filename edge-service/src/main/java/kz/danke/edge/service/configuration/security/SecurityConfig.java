@@ -28,8 +28,14 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -137,13 +143,29 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return new CorsWebFilter(source);
+    }
+
+    @Bean
     public SecurityWebFilterChain securityApplied(
             ServerHttpSecurity httpSecurity,
             @Qualifier("oauth2UserRedirectSuccessHandler") ServerAuthenticationSuccessHandler oauth2SuccessHandler,
             @Qualifier("oauth2UserRedirectFailureHandler") ServerAuthenticationFailureHandler oauth2FailureHandler,
             @Qualifier("loggingFilter") LoggingFilter loggingFilter,
             @Qualifier("userLogoutHandler") ServerLogoutHandler userLogoutHandler,
-            AuthFilter authFilter
+            AuthFilter authFilter,
+            CorsWebFilter corsWebFilter
     ) {
         httpSecurity
                 .csrf()
@@ -176,6 +198,7 @@ public class SecurityConfig {
                 .authenticationSuccessHandler(oauth2SuccessHandler)
                 .authenticationFailureHandler(oauth2FailureHandler)
                 .and()
+                .addFilterAt(corsWebFilter, SecurityWebFiltersOrder.CORS)
                 .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN);
 
         return httpSecurity.build();
