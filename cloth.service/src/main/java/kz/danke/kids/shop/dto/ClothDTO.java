@@ -20,6 +20,7 @@ public class ClothDTO {
     private Integer price;
     private String color;
     private List<String> images;
+    private String description;
 
     public static ClothDTO toClothDTO(Cloth cloth) {
         return new ClothDTO(
@@ -27,7 +28,8 @@ public class ClothDTO {
                 cloth.getName(),
                 cloth.getPrice(),
                 cloth.getColor(),
-                cloth.getImages()
+                cloth.getImages(),
+                cloth.getDescription()
         );
     }
 }
