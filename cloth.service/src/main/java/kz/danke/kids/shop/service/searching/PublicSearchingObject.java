@@ -16,4 +16,5 @@ public class PublicSearchingObject {
     private Integer age;
     private String height;
     private String color;
+    private String category;
 }

@@ -29,7 +29,7 @@ public class Cloth {
     @Field(type = FieldType.Text, includeInParent = true)
     private String sex;
     @Field(type = FieldType.Nested, includeInParent = true)
-    private List<LineSize> lineSizes;
+    private List<LineSize> lineSizes = new ArrayList<>();
     @Field(type = FieldType.Text, includeInParent = true)
     private List<String> images = new ArrayList<>();
     @Field(type = FieldType.Nested, includeInParent = true)
@@ -38,6 +38,8 @@ public class Cloth {
     private String color;
     @Field(type = FieldType.Integer, includeInParent = true)
     private Integer price;
+    @Field(type = FieldType.Text, includeInParent = true)
+    private String category;
 
     @Override
     public boolean equals(Object o) {

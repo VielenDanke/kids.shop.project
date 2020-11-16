@@ -43,7 +43,8 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
             return elasticsearchOperations.search(nativeSearchQuery, cClass);
         }
         long countNonNullFields = Stream.of(searchingObject.getName(), searchingObject.getDescription(), searchingObject.getMaterial(),
-                searchingObject.getColor(), searchingObject.getHeight(), searchingObject.getSex(), searchingObject.getAge())
+                searchingObject.getColor(), searchingObject.getHeight(), searchingObject.getSex(), searchingObject.getAge(),
+                searchingObject.getCategory())
                 .filter(Objects::nonNull)
                 .count();
 
@@ -69,6 +70,9 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
         }
         if (!StringUtils.isEmpty(searchingObject.getColor())) {
             boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.colorAmount.color", searchingObject.getColor()));
+        }
+        if (!StringUtils.isEmpty(searchingObject.getCategory())) {
+            boolQueryBuilder.should(QueryBuilders.matchQuery("category", searchingObject.getCategory()));
         }
         boolQueryBuilder.minimumShouldMatch((int) countNonNullFields);
 

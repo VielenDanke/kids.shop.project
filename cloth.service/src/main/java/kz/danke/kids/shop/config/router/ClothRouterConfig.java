@@ -38,6 +38,9 @@ public class ClothRouterConfig {
         ).andRoute(
                 RequestPredicates.POST("/clothes/validate"),
                 clothHandler::checkIfAmountEnough
+        ).andRoute(
+                RequestPredicates.POST("/clothes/category"),
+                clothHandler::addCategory
         );
     }
 }

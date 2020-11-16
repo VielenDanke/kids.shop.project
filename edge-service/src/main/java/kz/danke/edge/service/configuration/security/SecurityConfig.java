@@ -132,7 +132,8 @@ public class SecurityConfig {
                 "/cart/validate",
                 "/cart/process",
                 "/clothes/*/files",
-                "/clothes"
+                "/clothes",
+                "/clothes/category"
         };
 
         authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers);
@@ -181,6 +182,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes").hasRole(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.POST, "/clothes/category").hasRole(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasRole(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()
                 .authenticated()

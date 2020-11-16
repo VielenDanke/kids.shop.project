@@ -1,15 +1,13 @@
 package kz.danke.kids.shop.config.handler;
 
-import kz.danke.kids.shop.document.Cart;
-import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.document.ClothCart;
-import kz.danke.kids.shop.document.LineSize;
+import kz.danke.kids.shop.document.*;
 import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
 import kz.danke.kids.shop.exceptions.ClothNotEnoughAmountException;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
+import kz.danke.kids.shop.service.CategoryService;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +27,12 @@ import java.util.*;
 public class ClothHandler {
 
     private final ClothService clothService;
+    private final CategoryService categoryService;
 
     @Autowired
-    public ClothHandler(ClothService clothService) {
+    public ClothHandler(ClothService clothService, CategoryService categoryService) {
         this.clothService = clothService;
+        this.categoryService = categoryService;
     }
 
     public Mono<ServerResponse> handleClothSaving(ServerRequest serverRequest) {
@@ -41,6 +41,11 @@ public class ClothHandler {
                         .name(clothRequest.getName())
                         .description(clothRequest.getDescription())
                         .materials(clothRequest.getMaterialList())
+                        .sex(clothRequest.getSex())
+                        .category(clothRequest.getCategory())
+                        .price(clothRequest.getPrice())
+                        .lineSizes(clothRequest.getLineSizes())
+                        .color(clothRequest.getColor())
                         .build()
                 )
                 .flatMap(clothService::save)
@@ -162,5 +167,20 @@ public class ClothHandler {
                         ResponseFailed.class
                 )
         );
+    }
+
+    public Mono<ServerResponse> addCategory(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(Category.class)
+                .flatMap(categoryService::save)
+                .flatMap(category -> ServerResponse.ok().body(Mono.just(category), Category.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
+                        Mono.just(
+                                new ResponseFailed(
+                                        ex.getLocalizedMessage(),
+                                        ex.toString(),
+                                        serverRequest.path()
+                                )
+                        ), ResponseFailed.class
+                ));
     }
 }

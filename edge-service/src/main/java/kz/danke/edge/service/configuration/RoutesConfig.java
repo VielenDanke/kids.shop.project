@@ -85,6 +85,16 @@ public class RoutesConfig {
                                 .uri("lb://cloth-ms")
                 )
                 .route(
+                        "clothes-add-category",
+                        clothAddCategory -> clothAddCategory
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/clothes/category")
+                                .filters(gatewayFilterSpec ->
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .uri("lb://cloth-ms")
+                )
+                .route(
                         "user-cart-validate",
                         userCartValidate -> userCartValidate
                                 .method(HttpMethod.POST)
