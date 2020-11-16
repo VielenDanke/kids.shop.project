@@ -45,7 +45,8 @@ public class ClothServiceApplication {
                     .thenMany(Flux.fromIterable(Arrays.asList(
                             Category.builder().id(UUID.randomUUID().toString()).category("Jeans").build(),
                             Category.builder().id(UUID.randomUUID().toString()).category("Jacket").build(),
-                            Category.builder().id(UUID.randomUUID().toString()).category("Shirt").build()
+                            Category.builder().id(UUID.randomUUID().toString()).category("Shirt").build(),
+                            Category.builder().id(UUID.randomUUID().toString()).category("Cap").build()
                     )))
                     .flatMap(categoryRepository::save)
                     .blockLast();
@@ -126,6 +127,7 @@ public class ClothServiceApplication {
                                     ))
                                     .description("fourth description")
                                     .color("Red")
+                                    .category("Cap")
                                     .price(4500)
                                     .build()
                     ))
