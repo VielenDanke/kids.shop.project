@@ -168,19 +168,4 @@ public class ClothHandler {
                 )
         );
     }
-
-    public Mono<ServerResponse> addCategory(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(Category.class)
-                .flatMap(categoryService::save)
-                .flatMap(category -> ServerResponse.ok().body(Mono.just(category), Category.class))
-                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
-                        Mono.just(
-                                new ResponseFailed(
-                                        ex.getLocalizedMessage(),
-                                        ex.toString(),
-                                        serverRequest.path()
-                                )
-                        ), ResponseFailed.class
-                ));
-    }
 }

@@ -1,13 +1,9 @@
 package kz.danke.kids.shop.config.router;
 
+import kz.danke.kids.shop.config.handler.CategoryHandler;
 import kz.danke.kids.shop.config.handler.ClothHandler;
-import kz.danke.kids.shop.document.Cloth;
-import kz.danke.kids.shop.exceptions.ClothNotFoundException;
-import kz.danke.kids.shop.exceptions.ResponseFailed;
-import kz.danke.kids.shop.service.ClothService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
@@ -18,7 +14,7 @@ public class ClothRouterConfig {
 
     @Bean
     public RouterFunction<ServerResponse> clothRouterFunction(
-            ClothService clothService, ClothHandler clothHandler
+            ClothHandler clothHandler, CategoryHandler categoryHandler
     ) {
         return RouterFunctions.route(
                 RequestPredicates.GET("/clothes"),
@@ -39,8 +35,11 @@ public class ClothRouterConfig {
                 RequestPredicates.POST("/clothes/validate"),
                 clothHandler::checkIfAmountEnough
         ).andRoute(
-                RequestPredicates.POST("/clothes/category"),
-                clothHandler::addCategory
+                RequestPredicates.POST("/categories"),
+                categoryHandler::addCategory
+        ).andRoute(
+                RequestPredicates.GET("/categories"),
+                categoryHandler::finAllCategories
         );
     }
 }

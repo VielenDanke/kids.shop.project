@@ -85,13 +85,25 @@ public class RoutesConfig {
                                 .uri("lb://cloth-ms")
                 )
                 .route(
-                        "clothes-add-category",
+                        "get-all-categories",
+                        getAllCategories -> getAllCategories
+                                .method(HttpMethod.GET)
+                                .and()
+                                .path("/categories")
+                                .filters(gatewayFilterSpec ->
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .uri("lb://cloth-ms")
+                )
+                .route(
+                        "add-category",
                         clothAddCategory -> clothAddCategory
                                 .method(HttpMethod.POST)
                                 .and()
-                                .path("/clothes/category")
-                                .filters(gatewayFilterSpec ->
-                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .path("/categories")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
                                 .uri("lb://cloth-ms")
                 )
                 .route(

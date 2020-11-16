@@ -2,6 +2,7 @@ package kz.danke.kids.shop;
 
 import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.*;
+import kz.danke.kids.shop.repository.CategoryReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -23,11 +25,13 @@ public class ClothServiceApplication {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
     private final ClothService clothService;
+    private final CategoryReactiveElasticsearchRepositoryImpl categoryRepository;
 
     @Autowired
-    public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl, ClothService clothService) {
+    public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl, ClothService clothService, CategoryReactiveElasticsearchRepositoryImpl categoryRepository) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
         this.clothService = clothService;
+        this.categoryRepository = categoryRepository;
     }
 
     public static void main(String[] args) {
@@ -37,6 +41,15 @@ public class ClothServiceApplication {
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
+            categoryRepository.deleteAll()
+                    .thenMany(Flux.fromIterable(Arrays.asList(
+                            Category.builder().id(UUID.randomUUID().toString()).category("Jeans").build(),
+                            Category.builder().id(UUID.randomUUID().toString()).category("Jacket").build(),
+                            Category.builder().id(UUID.randomUUID().toString()).category("Shirt").build()
+                    )))
+                    .flatMap(categoryRepository::save)
+                    .blockLast();
+
             clothReactiveElasticsearchRepositoryImpl
                     .deleteAll()
                     .thenMany(Flux.just(
@@ -57,6 +70,7 @@ public class ClothServiceApplication {
                                     .description("first description")
                                     .color("Orange")
                                     .price(1200)
+                                    .category("Jeans")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("second")
@@ -75,6 +89,7 @@ public class ClothServiceApplication {
                                     .description("second description")
                                     .color("Grey")
                                     .price(2500)
+                                    .category("Shirt")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("third")
@@ -93,6 +108,7 @@ public class ClothServiceApplication {
                                     .description("third description")
                                     .color("Green")
                                     .price(3700)
+                                    .category("Jacket")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("fourth")
