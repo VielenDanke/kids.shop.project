@@ -58,4 +58,8 @@ public class UserHandler {
                     return ServerResponse.badRequest().body(Mono.just(responseFailed), ResponseFailed.class);
                 });
     }
+
+    public Mono<ServerResponse> getUserCabinet(ServerRequest serverRequest) {
+        return null;
+    }
 }

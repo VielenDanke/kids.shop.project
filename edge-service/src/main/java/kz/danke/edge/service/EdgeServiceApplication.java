@@ -30,7 +30,7 @@ public class EdgeServiceApplication {
 		return args -> {
 			User user = User.builder()
 					.id(UUID.randomUUID().toString())
-					.username("first")
+					.username("first@mail.ru")
 					.password(passwordEncoder.encode("first"))
 					.authorities(Collections.singleton("ROLE_USER"))
 					.address("address")
@@ -40,7 +40,10 @@ public class EdgeServiceApplication {
 					.phoneNumber("87777777777")
 					.build();
 
-			reactiveUserRepository.save(user).block();
+			reactiveUserRepository
+					.findByUsername("first@mail.ru")
+					.switchIfEmpty(reactiveUserRepository.save(user))
+					.block();
 		};
 	}
 

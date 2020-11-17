@@ -61,9 +61,10 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
 
                     HttpHeaders headers = response.getHeaders();
 
-                    headers.add(HttpHeaders.AUTHORIZATION, token);
-                    headers.add("Roles", String.join(" ", user.getAuthorities()));
-                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                    headers.set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "accessToken, roles");
+                    headers.set("accessToken", token);
+                    headers.set("roles", String.join(" ", user.getAuthorities()));
+                    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     return response.writeWith(Flux.just(wrappedLoginResponseJson));
                 });

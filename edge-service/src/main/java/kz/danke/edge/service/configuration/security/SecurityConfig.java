@@ -127,7 +127,9 @@ public class SecurityConfig {
 
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
 
-        String[] getMatchers = new String[]{};
+        String[] getMatchers = new String[]{
+                "/cabinet"
+        };
         String[] postMatchers = new String[]{
                 "/cart/validate",
                 "/cart/process",

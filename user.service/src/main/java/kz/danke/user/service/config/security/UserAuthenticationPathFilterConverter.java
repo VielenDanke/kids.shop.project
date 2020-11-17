@@ -27,12 +27,6 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
 
     @Override
     public Mono<Authentication> convert(ServerWebExchange exchange) {
-        String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
-        boolean b = jwtService.validateToken(authorization);
-        Claims claims1 = jwtService.extractTokenClaims(authorization);
-        String user1 = claims1.get("user", String.class);
-        User user2 = jsonObjectMapper.deserializeJson(user1, User.class);
-
         return Mono.just(exchange.getRequest().getHeaders())
                 .filter(Objects::nonNull)
                 .switchIfEmpty(Mono.empty())

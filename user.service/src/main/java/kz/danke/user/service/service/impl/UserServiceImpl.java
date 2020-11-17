@@ -32,6 +32,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Mono<User> getUserInSession() {
+        return getPrincipalFromSecurityContext();
+    }
+
+    @Override
     public Mono<Cart> validateCartShop(Cart cart) {
         return getPrincipalFromSecurityContext()
                 .then(this.getOnlyEnoughClothAmount(cart));

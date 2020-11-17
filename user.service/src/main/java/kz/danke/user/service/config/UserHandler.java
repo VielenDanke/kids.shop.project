@@ -1,6 +1,7 @@
 package kz.danke.user.service.config;
 
 import kz.danke.user.service.document.Cart;
+import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
 import kz.danke.user.service.exception.ClothCartNotFoundException;
@@ -51,5 +52,12 @@ public class UserHandler {
                         ex.getLocalizedMessage(),
                         request.path())
                 ), ResponseFailed.class);
+    }
+
+    public Mono<ServerResponse> getUserCabinet(ServerRequest serverRequest) {
+        return userService.getUserInSession()
+                .flatMap(user -> ServerResponse.ok().body(Mono.just(user), User.class))
+                .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
+                .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
     }
 }

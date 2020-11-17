@@ -49,10 +49,7 @@ public class ClothServiceApplication {
                             Category.builder().id(UUID.randomUUID().toString()).category("Cap").build()
                     )))
                     .flatMap(categoryRepository::save)
-                    .blockLast();
-
-            clothReactiveElasticsearchRepositoryImpl
-                    .deleteAll()
+                    .then(clothReactiveElasticsearchRepositoryImpl.deleteAll())
                     .thenMany(Flux.just(
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .name("first")

@@ -20,6 +20,10 @@ public class UserRoutesConfig {
                 .andRoute(
                         RequestPredicates.POST("/cart/process"),
                         userHandler::handleChargeProcess
+                )
+                .andRoute(
+                        RequestPredicates.GET("/cabinet"),
+                        userHandler::getUserCabinet
                 );
     }
 }

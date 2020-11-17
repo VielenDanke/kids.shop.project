@@ -130,6 +130,16 @@ public class RoutesConfig {
                                 }))
                                 .uri("lb://user-ms")
                 )
+                .route(
+                        "get-user-cabinet",
+                        getUserCabinet -> getUserCabinet
+                                .method(HttpMethod.GET)
+                                .and()
+                                .path("/cabinet")
+                                .filters(gatewayFilterSpec ->
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .uri("lb://user-ms")
+                )
                 .build();
     }
 }
