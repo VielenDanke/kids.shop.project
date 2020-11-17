@@ -2,6 +2,7 @@ package kz.danke.user.service.config.security;
 
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.service.JsonObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,12 +51,21 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper, JwtService<String> jwtService) {
+    public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper,
+                                 JwtService<String> jwtService,
+                                 @Value("${auth.token.key}") String accessTokenKey,
+                                 @Value("${user.claims.key}") String userClaimsKey
+    ) {
         ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
 
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
 
-        authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
+        UserAuthenticationPathFilterConverter authenticationConverter = new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper);
+
+        authenticationConverter.setAccessTokenKey(accessTokenKey);
+        authenticationConverter.setUserClaimsKey(userClaimsKey);
+
+        authFilter.setAuthenticationConverter(authenticationConverter);
 
         return authFilter;
     }

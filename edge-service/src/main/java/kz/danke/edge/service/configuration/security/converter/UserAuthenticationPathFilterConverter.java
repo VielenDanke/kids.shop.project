@@ -17,11 +17,17 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
 
     private final JwtService<String> jwtService;
     private final JsonObjectMapper jsonObjectMapper;
+    private final String accessTokenKey;
+    private final String userClaimsKey;
 
     public UserAuthenticationPathFilterConverter(JwtService<String> jwtService,
-                                                 JsonObjectMapper jsonObjectMapper) {
+                                                 JsonObjectMapper jsonObjectMapper,
+                                                 String accessTokenKey,
+                                                 String userClaimsKey) {
         this.jwtService = jwtService;
         this.jsonObjectMapper = jsonObjectMapper;
+        this.accessTokenKey = accessTokenKey;
+        this.userClaimsKey = userClaimsKey;
     }
 
     @Override
@@ -29,11 +35,11 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
         return Mono.just(exchange.getRequest().getHeaders())
                 .filter(Objects::nonNull)
                 .switchIfEmpty(Mono.empty())
-                .map(headers -> headers.getFirst("Authorization"))
+                .map(headers -> headers.getFirst(accessTokenKey))
                 .filter(jwtService::validateToken)
                 .map(jwtService::extractTokenClaims)
-                .map(claims -> claims.get("user"))
-                .map(userClaims -> jsonObjectMapper.deserializeJson((String) userClaims, User.class))
+                .map(claims -> claims.get(userClaimsKey, String.class))
+                .map(userClaims -> jsonObjectMapper.deserializeJson(userClaims, User.class))
                 .map(user -> new UsernamePasswordAuthenticationToken(
                         user.getUsername(),
                         null,

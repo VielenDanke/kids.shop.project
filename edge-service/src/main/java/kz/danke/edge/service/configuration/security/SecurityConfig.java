@@ -11,6 +11,7 @@ import kz.danke.edge.service.service.JsonObjectMapper;
 import kz.danke.edge.service.service.ReactiveUserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,9 +34,6 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -63,21 +61,34 @@ public class SecurityConfig {
 
     @Bean("userLogoutHandler")
     public ServerLogoutHandler userLogoutHandler(@Qualifier("userJwtService") JwtService<String> jwtService,
-                                                 JsonObjectMapper jsonObjectMapper) {
-        return new UserLogoutHandler(jwtService, jsonObjectMapper);
+                                                 JsonObjectMapper jsonObjectMapper,
+                                                 @Value("${auth.token.key}") String accessTokenKey,
+                                                 @Value("${auth.roles.key}") String authRolesKey,
+                                                 @Value("${user.claims.key}") String userClaimsKey) {
+        UserLogoutHandler userLogoutHandler = new UserLogoutHandler(jwtService, jsonObjectMapper);
+
+        userLogoutHandler.setAccessTokenKey(accessTokenKey);
+        userLogoutHandler.setRolesKey(authRolesKey);
+        userLogoutHandler.setUserClaimsKey(userClaimsKey);
+
+        return userLogoutHandler;
     }
 
     @Bean("oauth2UserRedirectSuccessHandler")
     public ServerAuthenticationSuccessHandler oauth2UserRedirectSuccessHandler(
             @Qualifier("userJwtService") JwtService<String> jwtService,
             ReactiveUserRepository reactiveUserRepository,
-            JsonObjectMapper jsonObjectMapper
+            JsonObjectMapper jsonObjectMapper,
+            @Value("${auth.token.key}") String accessTokenKey,
+            @Value("${auth.roles.key}") String authRolesKey
     ) {
         OAuthUserServerAuthenticationSuccessHandler successHandler = new OAuthUserServerAuthenticationSuccessHandler();
 
         successHandler.setJwtService(jwtService);
         successHandler.setReactiveUserRepository(reactiveUserRepository);
         successHandler.setJsonObjectMapper(jsonObjectMapper);
+        successHandler.setAuthRolesKey(authRolesKey);
+        successHandler.setAuthTokenKey(accessTokenKey);
 
         return successHandler;
     }
@@ -92,11 +103,13 @@ public class SecurityConfig {
             @Qualifier("userDetailsRepositoryReactiveAuthenticationManager") UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
             @Qualifier("userJwtService") JwtService<String> jwtService,
             ReactiveUserRepository reactiveUserRepository,
-            JsonObjectMapper jsonObjectMapper
+            JsonObjectMapper jsonObjectMapper,
+            @Value("${auth.token.key}") String accessTokenKey,
+            @Value("${auth.roles.key}") String authRolesKey
     ) {
         LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
 
-        UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService);
+        UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService, accessTokenKey, authRolesKey);
         UserServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler();
 
         authenticationSuccessHandler.setReactiveUserRepository(reactiveUserRepository);
@@ -118,7 +131,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthFilter authFilter(JsonObjectMapper jsonObjectMapper,
-                                 JwtService<String> jwtService
+                                 JwtService<String> jwtService,
+                                 @Value("${auth.token.key}") String accessTokenKey,
+                                 @Value("${user.claims.key}") String userClaimsKey
     ) {
         ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
         UserServerAuthenticationFailureHandler serverAuthenticationFailureHandler = new UserServerAuthenticationFailureHandler();
@@ -140,7 +155,7 @@ public class SecurityConfig {
 
         authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers);
         authFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
-        authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper));
+        authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper, accessTokenKey, userClaimsKey));
 
         return authFilter;
     }

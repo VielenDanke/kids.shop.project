@@ -26,12 +26,18 @@ import java.nio.charset.StandardCharsets;
 public class UserServerAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
     private final JwtService<String> userJwtService;
+    private final String accessTokenKey;
+    private final String rolesKey;
 
     private ReactiveUserRepository reactiveUserRepository;
     private JsonObjectMapper jsonObjectMapper;
 
-    public UserServerAuthenticationSuccessHandler(JwtService<String> userJwtService) {
+    public UserServerAuthenticationSuccessHandler(JwtService<String> userJwtService,
+                                                  String accessTokenKey,
+                                                  String rolesKey) {
         this.userJwtService = userJwtService;
+        this.accessTokenKey = accessTokenKey;
+        this.rolesKey = rolesKey;
     }
 
     @Override
@@ -62,8 +68,8 @@ public class UserServerAuthenticationSuccessHandler implements ServerAuthenticat
                     HttpHeaders headers = response.getHeaders();
 
                     headers.set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "accessToken, roles");
-                    headers.set("accessToken", token);
-                    headers.set("roles", String.join(" ", user.getAuthorities()));
+                    headers.set(accessTokenKey, token);
+                    headers.set(rolesKey, String.join(" ", user.getAuthorities()));
                     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     return response.writeWith(Flux.just(wrappedLoginResponseJson));

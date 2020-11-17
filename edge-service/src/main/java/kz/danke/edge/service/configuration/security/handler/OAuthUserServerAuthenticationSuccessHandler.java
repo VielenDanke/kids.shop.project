@@ -34,6 +34,8 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
     private JwtService<String> jwtService;
     private ReactiveUserRepository reactiveUserRepository;
     private JsonObjectMapper jsonObjectMapper;
+    private String authTokenKey;
+    private String authRolesKey;
 
     @Override
     public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
@@ -80,11 +82,10 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
 
                     HttpHeaders headers = response.getHeaders();
 
-                    String roles = String.join(" ", user.getAuthorities());
-
-                    headers.add(HttpHeaders.AUTHORIZATION, token);
-                    headers.add("Roles", roles);
-                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                    headers.set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "accessToken, roles");
+                    headers.set(authTokenKey, token);
+                    headers.set(authRolesKey, String.join(" ", user.getAuthorities()));
+                    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     response.setStatusCode(HttpStatus.OK);
 
@@ -111,6 +112,14 @@ public class OAuthUserServerAuthenticationSuccessHandler implements ServerAuthen
                     return response.writeWith(Flux.just(wrappedResponseFailedJson));
                 });
 
+    }
+
+    public void setAuthTokenKey(String authTokenKey) {
+        this.authTokenKey = authTokenKey;
+    }
+
+    public void setAuthRolesKey(String authRolesKey) {
+        this.authRolesKey = authRolesKey;
     }
 
     public void setJwtService(JwtService<String> jwtService) {

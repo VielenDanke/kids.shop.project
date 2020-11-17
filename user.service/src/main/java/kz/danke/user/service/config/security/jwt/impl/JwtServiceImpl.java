@@ -8,6 +8,7 @@ import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
@@ -19,6 +20,9 @@ public class JwtServiceImpl implements JwtService<String> {
 
     private final AppConfigProperties properties;
     private final JsonObjectMapper jsonObjectMapper;
+
+    @Value("${user.claims.key}")
+    private String userClaimsKey;
 
     @Autowired
     public JwtServiceImpl(AppConfigProperties properties,
@@ -53,13 +57,11 @@ public class JwtServiceImpl implements JwtService<String> {
 
     @Override
     public String generateToken(User user) {
-        final String keyUserClaims = "user";
-
         HashMap<String, Object> claims = new HashMap<>();
 
         String serializedUser = jsonObjectMapper.serializeObject(user);
 
-        claims.put(keyUserClaims, serializedUser);
+        claims.put(userClaimsKey, serializedUser);
 
         Date creationDate = new Date();
         Date expirationDate = new Date(creationDate.getTime() + properties.getJwt().getExpiration() * 1000);

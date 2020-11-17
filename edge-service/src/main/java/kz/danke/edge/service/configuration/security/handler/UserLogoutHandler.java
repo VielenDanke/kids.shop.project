@@ -27,6 +27,9 @@ public class UserLogoutHandler implements ServerLogoutHandler {
 
     private final JwtService<String> jwtService;
     private final JsonObjectMapper jsonObjectMapper;
+    private String accessTokenKey;
+    private String rolesKey;
+    private String userClaimsKey;
 
     private ServerWebExchangeMatcher matcher = ServerWebExchangeMatchers.pathMatchers("/logout");
 
@@ -80,11 +83,23 @@ public class UserLogoutHandler implements ServerLogoutHandler {
                     DataBuffer wrappedLogoutResponse = dataBufferFactory
                             .wrap(logoutResponseJson.getBytes(StandardCharsets.UTF_8));
 
-                    responseHeaders.remove(HttpHeaders.AUTHORIZATION);
-                    responseHeaders.remove("Roles");
+                    responseHeaders.remove("accessToken");
+                    responseHeaders.remove("roles");
                     responseHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     return response.writeWith(Flux.just(wrappedLogoutResponse));
                 });
+    }
+
+    public void setAccessTokenKey(String accessTokenKey) {
+        this.accessTokenKey = accessTokenKey;
+    }
+
+    public void setRolesKey(String rolesKey) {
+        this.rolesKey = rolesKey;
+    }
+
+    public void setUserClaimsKey(String userClaimsKey) {
+        this.userClaimsKey = userClaimsKey;
     }
 }
