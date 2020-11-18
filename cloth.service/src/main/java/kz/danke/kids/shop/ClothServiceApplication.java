@@ -24,13 +24,12 @@ import java.util.UUID;
 public class ClothServiceApplication {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
-    private final ClothService clothService;
     private final CategoryReactiveElasticsearchRepositoryImpl categoryRepository;
 
     @Autowired
-    public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl, ClothService clothService, CategoryReactiveElasticsearchRepositoryImpl categoryRepository) {
+    public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl,
+                                   CategoryReactiveElasticsearchRepositoryImpl categoryRepository) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
-        this.clothService = clothService;
         this.categoryRepository = categoryRepository;
     }
 

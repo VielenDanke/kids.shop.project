@@ -1,6 +1,7 @@
 package kz.danke.kids.shop.dto;
 
 import kz.danke.kids.shop.document.Cloth;
+import kz.danke.kids.shop.document.LineSize;
 import kz.danke.kids.shop.document.Material;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class ClothDTO {
     private String color;
     private List<String> images;
     private String description;
+    private List<LineSize> lineSizes;
 
     public static ClothDTO toClothDTO(Cloth cloth) {
         return new ClothDTO(
@@ -29,7 +31,8 @@ public class ClothDTO {
                 cloth.getPrice(),
                 cloth.getColor(),
                 cloth.getImages(),
-                cloth.getDescription()
+                cloth.getDescription(),
+                cloth.getLineSizes()
         );
     }
 }
