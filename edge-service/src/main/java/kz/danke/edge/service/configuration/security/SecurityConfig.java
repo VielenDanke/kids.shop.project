@@ -199,9 +199,9 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/categories").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
-                .pathMatchers(HttpMethod.POST, "/clothes").hasRole(Authorities.ROLE_ADMIN.name())
-                .pathMatchers(HttpMethod.POST, "/categories").hasRole(Authorities.ROLE_ADMIN.name())
-                .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasRole(Authorities.ROLE_ADMIN.name()) // remove after security would be done
+                .pathMatchers(HttpMethod.POST, "/clothes").hasAuthority(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.POST, "/categories").hasAuthority(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasAuthority(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()
                 .authenticated()
                 .and()

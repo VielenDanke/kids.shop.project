@@ -1,6 +1,7 @@
 package kz.danke.edge.service;
 
 import kz.danke.edge.service.configuration.AppConfigProperties;
+import kz.danke.edge.service.document.Authorities;
 import kz.danke.edge.service.document.Cart;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
@@ -32,7 +33,18 @@ public class EdgeServiceApplication {
 					.id(UUID.randomUUID().toString())
 					.username("first@mail.ru")
 					.password(passwordEncoder.encode("first"))
-					.authorities(Collections.singleton("ROLE_USER"))
+					.authorities(Collections.singleton(Authorities.ROLE_USER.name()))
+					.address("address")
+					.cart(new Cart())
+					.firsName("firstName")
+					.surname("surname")
+					.phoneNumber("87777777777")
+					.build();
+			User second = User.builder()
+					.id(UUID.randomUUID().toString())
+					.username("second@mail.ru")
+					.password(passwordEncoder.encode("second"))
+					.authorities(Collections.singleton(Authorities.ROLE_ADMIN.name()))
 					.address("address")
 					.cart(new Cart())
 					.firsName("firstName")
@@ -43,6 +55,10 @@ public class EdgeServiceApplication {
 			reactiveUserRepository
 					.findByUsername("first@mail.ru")
 					.switchIfEmpty(reactiveUserRepository.save(user))
+					.block();
+			reactiveUserRepository
+					.findByUsername("second@mail.ru")
+					.switchIfEmpty(reactiveUserRepository.save(second))
 					.block();
 		};
 	}

@@ -16,8 +16,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,8 +78,6 @@ public class ClothServiceImpl implements ClothService {
         CopyOnWriteArrayList<String> copyOnWriteArrayList = new CopyOnWriteArrayList<>();
 
         return Flux.fromIterable(files)
-                .parallel()
-                .runOn(Schedulers.parallel())
                 .map(file -> (FilePart) file)
                 .map(filePart -> {
                     String filename = filePart.filename();
@@ -91,7 +91,6 @@ public class ClothServiceImpl implements ClothService {
                     return finalFileName;
                 })
                 .doOnEach(stringSignal -> copyOnWriteArrayList.add(stringSignal.get()))
-                .sequential()
                 .then(clothReactiveElasticsearchRepositoryImpl.findById(id))
                 .flatMap(cloth -> {
                     cloth.getImages().addAll(copyOnWriteArrayList);
