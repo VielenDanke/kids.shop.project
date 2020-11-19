@@ -3,11 +3,15 @@ package kz.danke.kids.shop.service.impl;
 import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
+import kz.danke.kids.shop.exceptions.EmptyRequestFileException;
+import kz.danke.kids.shop.exceptions.FileProcessingException;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import kz.danke.kids.shop.service.searching.QueryCreator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
@@ -16,11 +20,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -75,25 +83,26 @@ public class ClothServiceImpl implements ClothService {
 
     @Override
     public Mono<Cloth> addFilesToCloth(List<Part> files, final String id) {
-        CopyOnWriteArrayList<String> copyOnWriteArrayList = new CopyOnWriteArrayList<>();
+        Mono<Cloth> clothById = clothReactiveElasticsearchRepositoryImpl.findById(id);
 
         return Flux.fromIterable(files)
-                .map(file -> (FilePart) file)
-                .map(filePart -> {
-                    String filename = filePart.filename();
+                .map(part -> {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-                    String finalFileName = UUID.randomUUID().toString() + filename;
+                    DataBufferUtils.write(part.content(), outputStream)
+                            .subscribe(DataBufferUtils.releaseConsumer());
 
-                    Path pathToFile = Paths.get(properties.getDir().getImageStore() + finalFileName);
-
-                    filePart.transferTo(pathToFile);
-
-                    return finalFileName;
+                    return outputStream.toByteArray();
                 })
-                .doOnEach(stringSignal -> copyOnWriteArrayList.add(stringSignal.get()))
-                .then(clothReactiveElasticsearchRepositoryImpl.findById(id))
-                .flatMap(cloth -> {
-                    cloth.getImages().addAll(copyOnWriteArrayList);
+                .map(bytes -> Base64.getEncoder().encodeToString(bytes))
+                .collectList()
+                .zipWith(clothById)
+                .flatMap(tuple -> {
+                    Cloth cloth = tuple.getT2();
+                    List<String> images = tuple.getT1();
+
+                    cloth.getImages().addAll(images);
+
                     return clothReactiveElasticsearchRepositoryImpl.save(cloth);
                 })
                 .onErrorContinue(Exception.class, (ex, obj) -> {
