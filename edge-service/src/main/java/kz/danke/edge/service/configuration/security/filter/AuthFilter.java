@@ -1,5 +1,6 @@
 package kz.danke.edge.service.configuration.security.filter;
 
+import kz.danke.edge.service.exception.TokenNotValidException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -44,6 +45,9 @@ public class AuthFilter implements WebFilter {
                 .switchIfEmpty(webFilterChain.filter(serverWebExchange).then(Mono.empty()))
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
                 .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                        new WebFilterExchange(serverWebExchange, webFilterChain), e
+                ))
+                .onErrorResume(TokenNotValidException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
                         new WebFilterExchange(serverWebExchange, webFilterChain), e
                 ));
     }

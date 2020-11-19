@@ -2,6 +2,7 @@ package kz.danke.edge.service.configuration.security.converter;
 
 import kz.danke.edge.service.configuration.security.jwt.JwtService;
 import kz.danke.edge.service.document.User;
+import kz.danke.edge.service.exception.TokenNotValidException;
 import kz.danke.edge.service.service.JsonObjectMapper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,7 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
                 .switchIfEmpty(Mono.empty())
                 .map(headers -> headers.getFirst(accessTokenKey))
                 .filter(jwtService::validateToken)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new TokenNotValidException("Token is not valid"))))
                 .map(jwtService::extractTokenClaims)
                 .map(claims -> claims.get(userClaimsKey, String.class))
                 .map(userClaims -> jsonObjectMapper.deserializeJson(userClaims, User.class))
