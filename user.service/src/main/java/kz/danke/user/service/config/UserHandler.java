@@ -4,6 +4,7 @@ import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
+import kz.danke.user.service.dto.response.UserCabinetResponse;
 import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.ResponseFailed;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
@@ -56,7 +57,8 @@ public class UserHandler {
 
     public Mono<ServerResponse> getUserCabinet(ServerRequest serverRequest) {
         return userService.getUserInSession()
-                .flatMap(user -> ServerResponse.ok().body(Mono.just(user), User.class))
+                .map(UserCabinetResponse::toUserCabinetResponse)
+                .flatMap(user -> ServerResponse.ok().body(Mono.just(user), UserCabinetResponse.class))
                 .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
                 .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
     }
