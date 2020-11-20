@@ -3,6 +3,7 @@ package kz.danke.kids.shop.config;
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class ElasticsearchCreationListener implements ApplicationListener<ContextRefreshedEvent> {
+public class ElasticsearchCreationListener implements ApplicationListener<ApplicationReadyEvent> {
 
     private final AppConfigProperties appConfigProperties;
     private final Package[] packages = Package.getPackages();
@@ -33,7 +34,7 @@ public class ElasticsearchCreationListener implements ApplicationListener<Contex
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
         final String dot = ".";
 
         Set<String> indices = appConfigProperties.getElasticsearch()

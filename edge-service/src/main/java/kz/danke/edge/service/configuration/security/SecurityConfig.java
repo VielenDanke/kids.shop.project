@@ -41,8 +41,10 @@ import reactor.core.publisher.Mono;
 public class SecurityConfig {
 
     @Bean("userDetailsRepositoryReactiveAuthenticationManager")
-    public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(PasswordEncoder passwordEncoder,
-                                                                                                                 ReactiveUserDetailsServiceImpl reactiveUserDetailsService) {
+    public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(
+            PasswordEncoder passwordEncoder,
+            ReactiveUserDetailsServiceImpl reactiveUserDetailsService
+    ) {
         UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
                 new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService);
 
@@ -120,13 +122,6 @@ public class SecurityConfig {
         loggingFilter.setAuthenticationFailureHandler(authenticationFailureHandler);
 
         return loggingFilter;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        final int strength = 8;
-
-        return new BCryptPasswordEncoder(strength);
     }
 
     @Bean

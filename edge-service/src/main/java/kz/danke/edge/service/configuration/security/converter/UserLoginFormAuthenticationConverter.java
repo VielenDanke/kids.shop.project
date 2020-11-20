@@ -25,6 +25,7 @@ public class UserLoginFormAuthenticationConverter implements ServerAuthenticatio
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyLoginRequestBodyException("Body request login is empty"))))
                 .map(inputStream -> jsonObjectMapper.deserializeInputStream(inputStream, LoginRequest.class))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ParseLoginRequestException("Cannot parse login request"))))
+                .doOnNext(loginRequest -> System.out.println(loginRequest.getUsername() + " " + loginRequest.getPassword()))
                 .map(loginRequest ->
                         new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
                 );
