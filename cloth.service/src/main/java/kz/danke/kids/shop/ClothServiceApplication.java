@@ -12,9 +12,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -41,14 +47,22 @@ public class ClothServiceApplication {
     }
 
     @Bean
-    public CommandLineRunner commandLineRunner() throws InterruptedException {
+    public CommandLineRunner commandLineRunner() throws InterruptedException, IOException {
+        File file = new File("image.jpg");
+
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        byte[] fileBytes = fileInputStream.readAllBytes();
+
+        final String image = Base64.getEncoder().encodeToString(fileBytes);
+
         return args -> {
             promotionRepository
                     .deleteAll()
                     .thenMany(Flux.fromIterable(Arrays.asList(
-                            PromotionCard.builder().image("first").description("first").id(UUID.randomUUID().toString()).build(),
-                            PromotionCard.builder().image("second").description("second").id(UUID.randomUUID().toString()).build(),
-                            PromotionCard.builder().image("third").description("third").id(UUID.randomUUID().toString()).build()
+                            PromotionCard.builder().image(image).name("first").description("first").id(UUID.randomUUID().toString()).build(),
+                            PromotionCard.builder().image(image).name("second").description("second").id(UUID.randomUUID().toString()).build(),
+                            PromotionCard.builder().image(image).name("third").description("third").id(UUID.randomUUID().toString()).build()
                     )))
                     .flatMap(promotionRepository::save)
                     .doOnNext(prCadr -> System.out.println("PrCadr: " + prCadr.getId()))
@@ -64,6 +78,7 @@ public class ClothServiceApplication {
                     .then(clothReactiveElasticsearchRepositoryImpl.deleteAll())
                     .thenMany(Flux.just(
                             Cloth.builder().id(UUID.randomUUID().toString())
+                                    .images(Collections.singletonList(image))
                                     .name("first")
                                     .sex(Gender.MAN.name())
                                     .lineSizes(Collections.singletonList(
@@ -83,6 +98,7 @@ public class ClothServiceApplication {
                                     .category("Jeans")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
+                                    .images(Collections.singletonList(image))
                                     .name("second")
                                     .sex(Gender.WOMAN.name())
                                     .lineSizes(Collections.singletonList(
@@ -102,6 +118,7 @@ public class ClothServiceApplication {
                                     .category("Shirt")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
+                                    .images(Collections.singletonList(image))
                                     .name("third")
                                     .sex(Gender.MAN.name())
                                     .lineSizes(Collections.singletonList(
@@ -121,6 +138,7 @@ public class ClothServiceApplication {
                                     .category("Jacket")
                                     .build(),
                             Cloth.builder().id(UUID.randomUUID().toString())
+                                    .images(Collections.singletonList(image))
                                     .name("fourth")
                                     .sex(Gender.WOMAN.name())
                                     .lineSizes(Collections.singletonList(
