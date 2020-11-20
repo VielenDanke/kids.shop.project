@@ -107,6 +107,45 @@ public class RoutesConfig {
                                 .uri("lb://cloth-ms")
                 )
                 .route(
+                        "get-all-promotions",
+                        getAllPromotions -> getAllPromotions
+                        .method(HttpMethod.GET)
+                        .and()
+                        .path("/promotions")
+                        .filters(gatewayFilterSpec ->
+                                gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                        .uri("lb://cloth-ms")
+                )
+                .route(
+                        "add-new-promotions",
+                        addNewPromotions -> addNewPromotions
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/promotions")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
+                                .uri("lb://cloth-ms")
+                )
+                .route(
+                        "add-file-to-promotion",
+                        addFileToPromotion -> addFileToPromotion
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/promotions/*/file")
+                                .filters(
+                                        clothAddFilesFilter -> clothAddFilesFilter.rewritePath(
+                                                "/promotions/(?<segment>.*)/file",
+                                                "/promotions/${segment}/file"
+                                        ).retry(retryConfig -> {
+                                            retryConfig = globalRetryConfig;
+                                            retryConfig.setMethods(HttpMethod.POST);
+                                        })
+                                )
+                                .uri("lb://cloth-ms")
+                )
+                .route(
                         "user-cart-validate",
                         userCartValidate -> userCartValidate
                                 .method(HttpMethod.POST)

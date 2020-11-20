@@ -2,6 +2,7 @@ package kz.danke.kids.shop.config.router;
 
 import kz.danke.kids.shop.config.handler.CategoryHandler;
 import kz.danke.kids.shop.config.handler.ClothHandler;
+import kz.danke.kids.shop.config.handler.PromotionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RequestPredicates;
@@ -14,7 +15,7 @@ public class ClothRouterConfig {
 
     @Bean
     public RouterFunction<ServerResponse> clothRouterFunction(
-            ClothHandler clothHandler, CategoryHandler categoryHandler
+            ClothHandler clothHandler, CategoryHandler categoryHandler, PromotionHandler promotionHandler
     ) {
         return RouterFunctions.route(
                 RequestPredicates.GET("/clothes"),
@@ -40,6 +41,15 @@ public class ClothRouterConfig {
         ).andRoute(
                 RequestPredicates.GET("/categories"),
                 categoryHandler::finAllCategories
+        ).andRoute(
+                RequestPredicates.POST("/promotions"),
+                promotionHandler::handleSavePromotion
+        ).andRoute(
+                RequestPredicates.GET("/promotions"),
+                promotionHandler::getAllPromotions
+        ).andRoute(
+                RequestPredicates.POST("/promotions/{id}/file"),
+                promotionHandler::handleSaveFileToPromotion
         );
     }
 }

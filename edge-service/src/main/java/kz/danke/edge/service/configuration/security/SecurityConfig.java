@@ -145,7 +145,9 @@ public class SecurityConfig {
                 "/cart/process",
                 "/clothes/*/files",
                 "/clothes",
-                "/categories"
+                "/categories",
+                "/promotions",
+                "/promotions/*/file"
         };
 
         authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers);
@@ -193,8 +195,11 @@ public class SecurityConfig {
                 .pathMatchers("/oauth2/user/registration").permitAll()
                 .pathMatchers(HttpMethod.GET, "/categories").permitAll()
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
+                .pathMatchers(HttpMethod.GET, "/promotions").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes").hasAuthority(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.POST, "/promotions").hasAuthority(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.POST, "/promotions/*/file").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/categories").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasAuthority(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()

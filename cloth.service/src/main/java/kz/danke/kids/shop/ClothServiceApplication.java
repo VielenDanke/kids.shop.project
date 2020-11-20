@@ -4,7 +4,7 @@ import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.*;
 import kz.danke.kids.shop.repository.CategoryReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
-import kz.danke.kids.shop.service.ClothService;
+import kz.danke.kids.shop.repository.PromotionCartReactiveElasticsearchRepositoryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -25,12 +25,15 @@ public class ClothServiceApplication {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
     private final CategoryReactiveElasticsearchRepositoryImpl categoryRepository;
+    private final PromotionCartReactiveElasticsearchRepositoryImpl promotionRepository;
 
     @Autowired
     public ClothServiceApplication(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl,
-                                   CategoryReactiveElasticsearchRepositoryImpl categoryRepository) {
+                                   CategoryReactiveElasticsearchRepositoryImpl categoryRepository,
+                                   PromotionCartReactiveElasticsearchRepositoryImpl promotionRepository) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
         this.categoryRepository = categoryRepository;
+        this.promotionRepository = promotionRepository;
     }
 
     public static void main(String[] args) {
@@ -38,9 +41,18 @@ public class ClothServiceApplication {
     }
 
     @Bean
-    public CommandLineRunner commandLineRunner() {
+    public CommandLineRunner commandLineRunner() throws InterruptedException {
         return args -> {
-            categoryRepository.deleteAll()
+            promotionRepository
+                    .deleteAll()
+                    .thenMany(Flux.fromIterable(Arrays.asList(
+                            PromotionCard.builder().image("first").description("first").id(UUID.randomUUID().toString()).build(),
+                            PromotionCard.builder().image("second").description("second").id(UUID.randomUUID().toString()).build(),
+                            PromotionCard.builder().image("third").description("third").id(UUID.randomUUID().toString()).build()
+                    )))
+                    .flatMap(promotionRepository::save)
+                    .doOnNext(prCadr -> System.out.println("PrCadr: " + prCadr.getId()))
+                    .then(categoryRepository.deleteAll())
                     .thenMany(Flux.fromIterable(Arrays.asList(
                             Category.builder().id(UUID.randomUUID().toString()).category("Jeans").build(),
                             Category.builder().id(UUID.randomUUID().toString()).category("Jacket").build(),
@@ -48,6 +60,7 @@ public class ClothServiceApplication {
                             Category.builder().id(UUID.randomUUID().toString()).category("Cap").build()
                     )))
                     .flatMap(categoryRepository::save)
+                    .doOnNext(cat -> System.out.println("Category: " + cat.getId()))
                     .then(clothReactiveElasticsearchRepositoryImpl.deleteAll())
                     .thenMany(Flux.just(
                             Cloth.builder().id(UUID.randomUUID().toString())
@@ -128,7 +141,7 @@ public class ClothServiceApplication {
                                     .build()
                     ))
                     .flatMap(clothReactiveElasticsearchRepositoryImpl::save)
-                    .doOnNext(cloth -> System.out.println(cloth.getId()))
+                    .doOnNext(cloth -> System.out.println("Cloth: " + cloth.getId()))
                     .blockLast();
         };
     }

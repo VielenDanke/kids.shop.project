@@ -27,7 +27,7 @@ public class EdgeServiceApplication {
 
 	@Bean
 	public CommandLineRunner runner(ReactiveUserRepository reactiveUserRepository,
-									PasswordEncoder passwordEncoder) {
+									PasswordEncoder passwordEncoder) throws InterruptedException {
 		return args -> {
 			User user = User.builder()
 					.id(UUID.randomUUID().toString())
