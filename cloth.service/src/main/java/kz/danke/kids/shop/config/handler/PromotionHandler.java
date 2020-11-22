@@ -43,7 +43,7 @@ public class PromotionHandler {
         return serverRequest.multipartData()
                 .map(stringPartMultiValueMap -> stringPartMultiValueMap.getFirst(imageKey))
                 .flatMap(part -> promotionService.saveFileToPromotionCard(part, id))
-                .flatMap(part -> ServerResponse.ok().body(Mono.just("Files successfully added"), String.class))
+                .flatMap(promCard -> ServerResponse.ok().body(Mono.just(promCard), PromotionCard.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class
