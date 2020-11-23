@@ -8,6 +8,8 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
+    Mono<User> saveNewUser(User user);
+
     Mono<Cart> validateCartShop(Cart cart);
 
     Mono<ChargeResponse> processCartShop(ChargeRequest chargeRequest);

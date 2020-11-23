@@ -3,7 +3,9 @@ package kz.danke.user.service.config;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
+import kz.danke.user.service.dto.request.RegistrationRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
+import kz.danke.user.service.dto.response.RegistrationResponse;
 import kz.danke.user.service.dto.response.UserCabinetResponse;
 import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.ResponseFailed;
@@ -61,5 +63,17 @@ public class UserHandler {
                 .flatMap(user -> ServerResponse.ok().body(Mono.just(user), UserCabinetResponse.class))
                 .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
                 .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
+    }
+
+    public Mono<ServerResponse> saveNewUser(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(RegistrationRequest.class)
+                .map(regReq -> User.builder().username(regReq.getUsername()).password(regReq.getPassword()).build())
+                .flatMap(userService::saveNewUser)
+                .map(user -> new RegistrationResponse(user.getId(), user.getUsername()))
+                .flatMap(regResp -> ServerResponse.ok().body(Mono.just(regResp), RegistrationResponse.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                        ResponseFailed.class
+                ));
     }
 }

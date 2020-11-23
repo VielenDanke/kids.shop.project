@@ -1,6 +1,7 @@
 package kz.danke.user.service.config.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -16,6 +17,9 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class AuthFilter implements WebFilter {
@@ -58,6 +62,24 @@ public class AuthFilter implements WebFilter {
                 .then(this.authenticationSuccessHandler
                         .onAuthenticationSuccess(webFilterExchange, authentication))
                 .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+    }
+
+    public void setServerWebExchangeMatherWithPathMatchers(String[] getMatchers, String[] postMatchers, String[] deleteMatchers) {
+        List<ServerWebExchangeMatcher> matchers = new ArrayList<>();
+        if (getMatchers.length > 0) {
+            ServerWebExchangeMatcher getMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, getMatchers);
+            matchers.add(getMatcher);
+        }
+        if (postMatchers.length > 0) {
+            ServerWebExchangeMatcher postMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, postMatchers);
+            matchers.add(postMatcher);
+        }
+        if (deleteMatchers.length > 0) {
+            ServerWebExchangeMatcher deleteMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.DELETE, deleteMatchers);
+            matchers.add(deleteMatcher);
+        }
+        this.serverWebExchangeMatcher = ServerWebExchangeMatchers
+                .matchers(matchers.toArray(ServerWebExchangeMatcher[]::new));
     }
 
     public void setAuthenticationConverter(ServerAuthenticationConverter authenticationConverter) {

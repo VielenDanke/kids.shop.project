@@ -24,6 +24,10 @@ public class UserRoutesConfig {
                 .andRoute(
                         RequestPredicates.GET("/cabinet"),
                         userHandler::getUserCabinet
+                )
+                .andRoute(
+                        RequestPredicates.POST("/auth/registration"),
+                        userHandler::saveNewUser
                 );
     }
 }

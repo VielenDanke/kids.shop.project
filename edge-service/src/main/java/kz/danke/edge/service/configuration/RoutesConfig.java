@@ -109,12 +109,12 @@ public class RoutesConfig {
                 .route(
                         "get-all-promotions",
                         getAllPromotions -> getAllPromotions
-                        .method(HttpMethod.GET)
-                        .and()
-                        .path("/promotions")
-                        .filters(gatewayFilterSpec ->
-                                gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
-                        .uri("lb://cloth-ms")
+                                .method(HttpMethod.GET)
+                                .and()
+                                .path("/promotions")
+                                .filters(gatewayFilterSpec ->
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .uri("lb://cloth-ms")
                 )
                 .route(
                         "add-new-promotions",
@@ -148,19 +148,19 @@ public class RoutesConfig {
                 .route(
                         "delete-promotion-by-id",
                         deletePromotionById -> deletePromotionById
-                        .method(HttpMethod.DELETE)
-                        .and()
-                        .path("/promotions/*")
-                        .filters(
-                                deletePromotionFilter -> deletePromotionFilter.rewritePath(
-                                        "/promotions/(?<segment>.*)",
-                                        "/promotions/${segment}"
-                                ).retry(retryConfig -> {
-                                    retryConfig = globalRetryConfig;
-                                    retryConfig.setMethods(HttpMethod.DELETE);
-                                })
-                        )
-                        .uri("lb://cloth-ms")
+                                .method(HttpMethod.DELETE)
+                                .and()
+                                .path("/promotions/*")
+                                .filters(
+                                        deletePromotionFilter -> deletePromotionFilter.rewritePath(
+                                                "/promotions/(?<segment>.*)",
+                                                "/promotions/${segment}"
+                                        ).retry(retryConfig -> {
+                                            retryConfig = globalRetryConfig;
+                                            retryConfig.setMethods(HttpMethod.DELETE);
+                                        })
+                                )
+                                .uri("lb://cloth-ms")
                 )
                 .route(
                         "user-cart-validate",
@@ -194,6 +194,18 @@ public class RoutesConfig {
                                 .path("/cabinet")
                                 .filters(gatewayFilterSpec ->
                                         gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                .uri("lb://user-ms")
+                )
+                .route(
+                        "save-new-user",
+                        saveNewUser -> saveNewUser
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/auth/registration")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
                                 .uri("lb://user-ms")
                 )
                 .build();

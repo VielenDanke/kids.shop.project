@@ -1,5 +1,6 @@
 package kz.danke.user.service.service.impl;
 
+import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
@@ -15,20 +16,39 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.Collections;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final WebClient webClient;
     private final ReactiveUserRepository reactiveUserRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(WebClient webClient, ReactiveUserRepository reactiveUserRepository) {
+    public UserServiceImpl(WebClient webClient,
+                           ReactiveUserRepository reactiveUserRepository,
+                           PasswordEncoder passwordEncoder) {
         this.webClient = webClient;
         this.reactiveUserRepository = reactiveUserRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public Mono<User> saveNewUser(User user) {
+        return Mono.just(user)
+                .doOnNext(u -> {
+                    u.setId(UUID.randomUUID().toString());
+                    u.setPassword(passwordEncoder.encode(u.getPassword()));
+                    u.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
+                })
+                .flatMap(reactiveUserRepository::save);
     }
 
     @Override

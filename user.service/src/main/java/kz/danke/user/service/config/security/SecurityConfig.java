@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -36,6 +37,7 @@ public class SecurityConfig {
                 .authorizeExchange()
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
@@ -58,6 +60,19 @@ public class SecurityConfig {
     ) {
         ReactiveAuthenticationManager reactiveAuthenticationManager = new UserReactiveAuthenticationManager();
 
+        String[] getMatchers = new String[]{
+                "/cabinet"
+        };
+
+        String[] postMatchers = new String[]{
+                "/cart/validate",
+                "/cart/process"
+        };
+
+        String[] deleteMatchers = new String[]{
+
+        };
+
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
 
         UserAuthenticationPathFilterConverter authenticationConverter = new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper);
@@ -66,6 +81,8 @@ public class SecurityConfig {
         authenticationConverter.setUserClaimsKey(userClaimsKey);
 
         authFilter.setAuthenticationConverter(authenticationConverter);
+
+        authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers, deleteMatchers);
 
         return authFilter;
     }
