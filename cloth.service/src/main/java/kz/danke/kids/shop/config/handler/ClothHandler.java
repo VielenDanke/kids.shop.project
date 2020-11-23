@@ -67,7 +67,8 @@ public class ClothHandler {
         return serverRequest.multipartData()
                 .map(stringPartMultiValueMap -> stringPartMultiValueMap.get(imageKey))
                 .flatMap(partList -> clothService.addFilesToCloth(partList, id))
-                .flatMap(cloth -> ServerResponse.ok().body(Mono.just("Files successfully added"), String.class))
+                .map(ClothDTO::toClothDTO)
+                .flatMap(clothDto -> ServerResponse.ok().body(Mono.just(clothDto), ClothDTO.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class

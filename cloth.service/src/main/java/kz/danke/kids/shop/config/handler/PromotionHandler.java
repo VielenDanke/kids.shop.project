@@ -2,6 +2,7 @@ package kz.danke.kids.shop.config.handler;
 
 import kz.danke.kids.shop.document.PromotionCard;
 import kz.danke.kids.shop.dto.request.PromotionCardSaveRequest;
+import kz.danke.kids.shop.exceptions.EmptyRequestException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,18 @@ public class PromotionHandler {
     @Autowired
     public PromotionHandler(PromotionService promotionService) {
         this.promotionService = promotionService;
+    }
+
+    public Mono<ServerResponse> handleDeletePromotion(ServerRequest serverRequest) {
+        return Mono.justOrEmpty(serverRequest.pathVariable("id"))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyRequestException("Path variable is not exists"))))
+                .flatMap(promotionService::deletePromotionCardById)
+                .then(ServerResponse.ok().build())
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
+                        Mono.just(
+                                new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                                ResponseFailed.class
+                        ));
     }
 
     public Mono<ServerResponse> handleSavePromotion(ServerRequest serverRequest) {

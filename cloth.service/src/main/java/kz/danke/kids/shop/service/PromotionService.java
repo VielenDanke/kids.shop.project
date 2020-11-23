@@ -12,4 +12,6 @@ public interface PromotionService {
     Flux<PromotionCard> findAll();
 
     Mono<PromotionCard> saveFileToPromotionCard(Part part, String id);
+
+    Mono<Void> deletePromotionCardById(String id);
 }

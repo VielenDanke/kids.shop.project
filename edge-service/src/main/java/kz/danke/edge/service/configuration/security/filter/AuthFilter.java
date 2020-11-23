@@ -68,7 +68,7 @@ public class AuthFilter implements WebFilter {
                 .subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
     }
 
-    public void setServerWebExchangeMatherWithPathMatchers(String[] getMatchers, String[] postMatchers) {
+    public void setServerWebExchangeMatherWithPathMatchers(String[] getMatchers, String[] postMatchers, String[] deleteMatchers) {
         List<ServerWebExchangeMatcher> matchers = new ArrayList<>();
         if (getMatchers.length != 0) {
             ServerWebExchangeMatcher getMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, getMatchers);
@@ -77,6 +77,10 @@ public class AuthFilter implements WebFilter {
         if (postMatchers.length != 0) {
             ServerWebExchangeMatcher postMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, postMatchers);
             matchers.add(postMatcher);
+        }
+        if (deleteMatchers.length != 0) {
+            ServerWebExchangeMatcher deleteMatcher = ServerWebExchangeMatchers.pathMatchers(HttpMethod.DELETE, deleteMatchers);
+            matchers.add(deleteMatcher);
         }
         this.serverWebExchangeMatcher = ServerWebExchangeMatchers.matchers(
                 matchers.toArray(ServerWebExchangeMatcher[]::new)

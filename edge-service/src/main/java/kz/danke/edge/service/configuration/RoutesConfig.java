@@ -146,6 +146,23 @@ public class RoutesConfig {
                                 .uri("lb://cloth-ms")
                 )
                 .route(
+                        "delete-promotion-by-id",
+                        deletePromotionById -> deletePromotionById
+                        .method(HttpMethod.DELETE)
+                        .and()
+                        .path("/promotions/*")
+                        .filters(
+                                deletePromotionFilter -> deletePromotionFilter.rewritePath(
+                                        "/promotions/(?<segment>.*)",
+                                        "/promotions/${segment}"
+                                ).retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.DELETE);
+                                })
+                        )
+                        .uri("lb://cloth-ms")
+                )
+                .route(
                         "user-cart-validate",
                         userCartValidate -> userCartValidate
                                 .method(HttpMethod.POST)

@@ -50,6 +50,9 @@ public class ClothRouterConfig {
         ).andRoute(
                 RequestPredicates.POST("/promotions/{id}/file"),
                 promotionHandler::handleSaveFileToPromotion
+        ).andRoute(
+                RequestPredicates.DELETE("/promotions/{id}"),
+                promotionHandler::handleDeletePromotion
         );
     }
 }

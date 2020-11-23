@@ -12,7 +12,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -53,13 +55,10 @@ public class EdgeServiceApplication {
 					.build();
 
 			reactiveUserRepository
-					.findByUsername("first@mail.ru")
-					.switchIfEmpty(reactiveUserRepository.save(user))
-					.block();
-			reactiveUserRepository
-					.findByUsername("second@mail.ru")
-					.switchIfEmpty(reactiveUserRepository.save(second))
-					.block();
+					.deleteAll()
+					.thenMany(Flux.fromIterable(Arrays.asList(user, second)))
+					.flatMap(reactiveUserRepository::save)
+					.blockLast();
 		};
 	}
 

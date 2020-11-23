@@ -39,6 +39,12 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
+    public Mono<Void> deletePromotionCardById(String id) {
+        return Mono.just(id)
+                .flatMap(promotionRepository::deleteById);
+    }
+
+    @Override
     public Mono<PromotionCard> saveFileToPromotionCard(Part part, String id) {
         Mono<PromotionCard> promotionCardById = promotionRepository.findById(id);
 

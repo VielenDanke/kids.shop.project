@@ -149,8 +149,11 @@ public class SecurityConfig {
                 "/promotions",
                 "/promotions/*/file"
         };
+        String[] deleteMatchers = new String[]{
+                "/promotions/*"
+        };
 
-        authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers);
+        authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers, deleteMatchers);
         authFilter.setAuthenticationFailureHandler(serverAuthenticationFailureHandler);
         authFilter.setAuthenticationConverter(new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper, accessTokenKey, userClaimsKey));
 
@@ -201,6 +204,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.POST, "/promotions").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/promotions/*/file").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/categories").hasAuthority(Authorities.ROLE_ADMIN.name())
+                .pathMatchers(HttpMethod.DELETE, "/promotions/*").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes/*/files").hasAuthority(Authorities.ROLE_ADMIN.name()) // remove after security would be done
                 .anyExchange()
                 .authenticated()

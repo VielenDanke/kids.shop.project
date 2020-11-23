@@ -3,34 +3,22 @@ package kz.danke.kids.shop.service.impl;
 import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
-import kz.danke.kids.shop.exceptions.EmptyRequestFileException;
-import kz.danke.kids.shop.exceptions.FileProcessingException;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import kz.danke.kids.shop.service.searching.QueryCreator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 @Slf4j
