@@ -37,6 +37,11 @@ public class ClothServiceImpl implements ClothService {
     }
 
     @Override
+    public Mono<Void> deleteById(String id) {
+        return clothReactiveElasticsearchRepositoryImpl.deleteById(id);
+    }
+
+    @Override
     public Flux<Cloth> findByIdIn(String... ids) {
         return clothTextSearching.findAllByIdIn(Cloth.class, ids).map(SearchHit::getContent);
     }

@@ -23,4 +23,6 @@ public interface ClothService {
     Flux<Cloth> findAllTextSearching(PublicSearchingObject searchingObject);
 
     Flux<Cloth> findByIdIn(String... ids);
+
+    Mono<Void> deleteById(String id);
 }

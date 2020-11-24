@@ -6,6 +6,7 @@ import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
 import kz.danke.kids.shop.exceptions.ClothNotEnoughAmountException;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
+import kz.danke.kids.shop.exceptions.EmptyPathVariableException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.CategoryService;
 import kz.danke.kids.shop.service.ClothService;
@@ -168,5 +169,18 @@ public class ClothHandler {
                         ResponseFailed.class
                 )
         );
+    }
+
+    public Mono<ServerResponse> deleteClothById(ServerRequest serverRequest) {
+        return Mono.justOrEmpty(serverRequest.pathVariable("id"))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyPathVariableException("Path variable ID not found"))))
+                .flatMap(clothService::deleteById)
+                .then(ServerResponse.ok().build())
+                .onErrorResume(EmptyPathVariableException.class, ex -> ServerResponse.badRequest().body(Mono.just(
+                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                ), ResponseFailed.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(Mono.just(
+                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                ), ResponseFailed.class));
     }
 }

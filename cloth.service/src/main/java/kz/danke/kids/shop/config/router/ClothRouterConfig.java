@@ -24,6 +24,9 @@ public class ClothRouterConfig {
                 RequestPredicates.GET("/clothes/{id}"),
                 clothHandler::handleClothById
         ).andRoute(
+                RequestPredicates.DELETE("/clothes/{id}"),
+                clothHandler::deleteClothById
+        ).andRoute(
                 RequestPredicates.POST("/clothes"),
                 clothHandler::handleClothSaving
         ).andRoute(

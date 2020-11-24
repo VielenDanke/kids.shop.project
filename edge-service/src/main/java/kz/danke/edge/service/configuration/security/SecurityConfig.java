@@ -150,7 +150,8 @@ public class SecurityConfig {
                 "/promotions/*/file"
         };
         String[] deleteMatchers = new String[]{
-                "/promotions/*"
+                "/promotions/*",
+                "/clothes/*"
         };
 
         authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers, deleteMatchers);
@@ -200,6 +201,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/promotions").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
+                .pathMatchers(HttpMethod.DELETE, "/clothes/*").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/promotions").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/promotions/*/file").hasAuthority(Authorities.ROLE_ADMIN.name())
