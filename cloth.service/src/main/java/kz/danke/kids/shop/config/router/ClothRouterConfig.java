@@ -30,6 +30,9 @@ public class ClothRouterConfig {
                 RequestPredicates.POST("/clothes"),
                 clothHandler::handleClothSaving
         ).andRoute(
+                RequestPredicates.POST("/clothes/cart"),
+                clothHandler::handleClothCart
+        ).andRoute(
                 RequestPredicates.POST("/clothes/{id}/files"),
                 clothHandler::handleFileSaving
         ).andRoute(

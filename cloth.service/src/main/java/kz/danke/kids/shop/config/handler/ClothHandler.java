@@ -13,6 +13,7 @@ import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -179,6 +180,17 @@ public class ClothHandler {
                 .onErrorResume(EmptyPathVariableException.class, ex -> ServerResponse.badRequest().body(Mono.just(
                         new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                 ), ResponseFailed.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(Mono.just(
+                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                ), ResponseFailed.class));
+    }
+
+    public Mono<ServerResponse> handleClothCart(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+                .map(list -> list.toArray(String[]::new))
+                .flatMapMany(clothService::findByIdIn)
+                .collectList()
+                .flatMap(list -> ServerResponse.ok().body(Mono.just(list), Cloth.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(Mono.just(
                         new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                 ), ResponseFailed.class));
