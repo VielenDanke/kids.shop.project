@@ -27,7 +27,7 @@ public class Cloth {
     @Field(type = FieldType.Text, includeInParent = true)
     private String description;
     @Field(type = FieldType.Text, includeInParent = true)
-    private String sex;
+    private String gender;
     @Field(type = FieldType.Nested, includeInParent = true)
     private List<LineSize> lineSizes = new ArrayList<>();
     @Field(type = FieldType.Text, includeInParent = true)

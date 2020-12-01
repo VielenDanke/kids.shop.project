@@ -43,7 +43,7 @@ public class ClothHandler {
                         .name(clothRequest.getName())
                         .description(clothRequest.getDescription())
                         .materials(clothRequest.getMaterialList())
-                        .sex(clothRequest.getSex())
+                        .gender(clothRequest.getSex())
                         .category(clothRequest.getCategory())
                         .price(clothRequest.getPrice())
                         .lineSizes(clothRequest.getLineSizes())

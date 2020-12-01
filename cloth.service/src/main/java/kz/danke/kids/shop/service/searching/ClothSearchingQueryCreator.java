@@ -43,7 +43,7 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
             return elasticsearchOperations.search(nativeSearchQuery, cClass);
         }
         long countNonNullFields = Stream.of(searchingObject.getName(), searchingObject.getDescription(), searchingObject.getMaterial(),
-                searchingObject.getColor(), searchingObject.getHeight(), searchingObject.getSex(), searchingObject.getAge(),
+                searchingObject.getColor(), searchingObject.getHeight(), searchingObject.getGender(), searchingObject.getAge(),
                 searchingObject.getCategory())
                 .filter(Objects::nonNull)
                 .count();
@@ -59,17 +59,17 @@ public class ClothSearchingQueryCreator implements QueryCreator<Cloth, PublicSea
         if (!StringUtils.isEmpty(searchingObject.getMaterial())) {
             boolQueryBuilder.should(QueryBuilders.regexpQuery("materials.material", wrapWithRegexp(searchingObject.getMaterial())));
         }
-        if (!StringUtils.isEmpty(searchingObject.getSex())) {
-            boolQueryBuilder.should(QueryBuilders.matchQuery("sex", searchingObject.getSex()));
+        if (!StringUtils.isEmpty(searchingObject.getGender())) {
+            boolQueryBuilder.should(QueryBuilders.matchQuery("gender", searchingObject.getGender()));
         }
         if (searchingObject.getAge() != null) {
-            boolQueryBuilder.should(QueryBuilders.termQuery("lineSizes.size.age", searchingObject.getAge()));
+            boolQueryBuilder.should(QueryBuilders.termQuery("lineSizes.age", searchingObject.getAge()));
         }
         if (!StringUtils.isEmpty(searchingObject.getHeight())) {
-            boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.size.height", searchingObject.getHeight()));
+            boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.height", searchingObject.getHeight()));
         }
         if (!StringUtils.isEmpty(searchingObject.getColor())) {
-            boolQueryBuilder.should(QueryBuilders.matchQuery("lineSizes.colorAmount.color", searchingObject.getColor()));
+            boolQueryBuilder.should(QueryBuilders.regexpQuery("color", wrapWithRegexp(searchingObject.getColor())));
         }
         if (!StringUtils.isEmpty(searchingObject.getCategory())) {
             boolQueryBuilder.should(QueryBuilders.matchQuery("category", searchingObject.getCategory()));

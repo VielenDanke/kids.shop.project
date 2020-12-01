@@ -12,8 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
@@ -80,7 +78,7 @@ public class ClothServiceApplication {
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .images(Collections.singletonList(image))
                                     .name("first")
-                                    .sex(Gender.MAN.name())
+                                    .gender(Gender.MAN.name())
                                     .lineSizes(Collections.singletonList(
                                             LineSize
                                                     .builder()
@@ -100,7 +98,7 @@ public class ClothServiceApplication {
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .images(Collections.singletonList(image))
                                     .name("second")
-                                    .sex(Gender.WOMAN.name())
+                                    .gender(Gender.WOMAN.name())
                                     .lineSizes(Collections.singletonList(
                                             LineSize
                                                     .builder()
@@ -120,7 +118,7 @@ public class ClothServiceApplication {
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .images(Collections.singletonList(image))
                                     .name("third")
-                                    .sex(Gender.MAN.name())
+                                    .gender(Gender.MAN.name())
                                     .lineSizes(Collections.singletonList(
                                             LineSize
                                                     .builder()
@@ -140,7 +138,7 @@ public class ClothServiceApplication {
                             Cloth.builder().id(UUID.randomUUID().toString())
                                     .images(Collections.singletonList(image))
                                     .name("fourth")
-                                    .sex(Gender.WOMAN.name())
+                                    .gender(Gender.WOMAN.name())
                                     .lineSizes(Collections.singletonList(
                                             LineSize
                                                     .builder()
