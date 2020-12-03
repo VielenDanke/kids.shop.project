@@ -147,8 +147,7 @@ public class SecurityConfig {
                 "/clothes",
                 "/categories",
                 "/promotions",
-                "/promotions/*/file",
-                "/clothes/cart"
+                "/promotions/*/file"
         };
         String[] deleteMatchers = new String[]{
                 "/promotions/*",
@@ -202,7 +201,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/clothes/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/promotions").permitAll()
                 .pathMatchers(HttpMethod.POST, "/clothes/searching").permitAll()
-                .pathMatchers(HttpMethod.POST, "/clothes/cart").hasAuthority(Authorities.ROLE_USER.name())
+                .pathMatchers(HttpMethod.POST, "/clothes/cart").permitAll()
                 .pathMatchers(HttpMethod.DELETE, "/clothes/*").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/clothes").hasAuthority(Authorities.ROLE_ADMIN.name())
                 .pathMatchers(HttpMethod.POST, "/promotions").hasAuthority(Authorities.ROLE_ADMIN.name())
