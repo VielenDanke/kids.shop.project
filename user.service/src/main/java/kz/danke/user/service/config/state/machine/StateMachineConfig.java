@@ -1,9 +1,14 @@
 package kz.danke.user.service.config.state.machine;
 
+import kz.danke.user.service.config.state.machine.actions.*;
 import kz.danke.user.service.config.state.machine.listener.PurchaseStateMachineEventListener;
+import kz.danke.user.service.service.JsonObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -16,6 +21,15 @@ import java.util.EnumSet;
 @EnableStateMachine
 @Scope(scopeName = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<PurchaseState, PurchaseEvent> {
+
+    public static final String CLOTH_CART_KEY = "CLOTH_CART";
+
+    private final JsonObjectMapper jsonObjectMapper;
+
+    @Autowired
+    public StateMachineConfig(JsonObjectMapper jsonObjectMapper) {
+        this.jsonObjectMapper = jsonObjectMapper;
+    }
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<PurchaseState, PurchaseEvent> config) throws Exception {
@@ -35,6 +49,54 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
 
     @Override
     public void configure(StateMachineTransitionConfigurer<PurchaseState, PurchaseEvent> transitions) throws Exception {
-        
+        transitions
+                .withExternal()
+                .source(PurchaseState.NEW)
+                .target(PurchaseState.RESERVED)
+                .event(PurchaseEvent.RESERVE)
+                .action(reserveAction(), errorAction())
+                .and()
+                .withExternal()
+                .source(PurchaseState.RESERVED)
+                .target(PurchaseState.CANCEL_RESERVED)
+                .event(PurchaseEvent.RESERVE_DECLINE)
+                .action(declineAction(), errorAction())
+                .and()
+                .withExternal()
+                .source(PurchaseState.RESERVED)
+                .target(PurchaseState.PURCHASE_COMPLETE)
+                .event(PurchaseEvent.BUY)
+                .action(purchaseAction(), errorAction())
+                .and()
+                .withExternal()
+                .source(PurchaseState.CANCEL_RESERVED)
+                .target(PurchaseState.RESERVED)
+                .event(PurchaseEvent.RESTORE_RESERVE)
+                .action(restoreAction(), errorAction());
+    }
+
+    @Bean
+    public Action<PurchaseState, PurchaseEvent> reserveAction() {
+        return new ReserveAction(jsonObjectMapper);
+    }
+
+    @Bean
+    public Action<PurchaseState, PurchaseEvent> declineAction() {
+        return new DeclineAction(jsonObjectMapper);
+    }
+
+    @Bean
+    public Action<PurchaseState, PurchaseEvent> purchaseAction() {
+        return new PurchaseAction(jsonObjectMapper);
+    }
+
+    @Bean
+    public Action<PurchaseState, PurchaseEvent> restoreAction() {
+        return new RestoreReserve(jsonObjectMapper);
+    }
+
+    @Bean
+    public Action<PurchaseState, PurchaseEvent> errorAction() {
+        return new ErrorAction();
     }
 }
