@@ -30,6 +30,8 @@ public class User {
     @Field(type = FieldType.Text)
     private String address;
     @Field(type = FieldType.Text)
+    private String city;
+    @Field(type = FieldType.Text)
     private String phoneNumber;
     @Field(type = FieldType.Text)
     private Set<String> authorities;

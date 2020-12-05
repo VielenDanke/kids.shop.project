@@ -18,6 +18,7 @@ public class UserCabinetResponse {
     private String firsName;
     private String surname;
     private String address;
+    private String city;
     private String phoneNumber;
     private Cart cart;
 
@@ -28,6 +29,7 @@ public class UserCabinetResponse {
                 user.getFirsName(),
                 user.getSurname(),
                 user.getAddress(),
+                user.getCity(),
                 user.getPhoneNumber(),
                 user.getCart()
         );

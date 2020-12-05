@@ -2,6 +2,8 @@ package kz.danke.kids.shop.config;
 
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -17,8 +19,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-@Slf4j
 public class ElasticsearchCreationListener implements ApplicationListener<ApplicationReadyEvent> {
+
+    private static final Logger log = LoggerFactory.getLogger(ElasticsearchCreationListener.class);
 
     private final AppConfigProperties appConfigProperties;
     private final Package[] packages = Package.getPackages();

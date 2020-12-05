@@ -5,12 +5,22 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Cart {
 
     private List<ClothCart> clothCartList = new ArrayList<>();
+
+    public Cart() {
+    }
+
+    public Cart(List<ClothCart> clothCartList) {
+        this.clothCartList = clothCartList;
+    }
+
+    public List<ClothCart> getClothCartList() {
+        return clothCartList;
+    }
+
+    public void setClothCartList(List<ClothCart> clothCartList) {
+        this.clothCartList = clothCartList;
+    }
 }

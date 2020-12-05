@@ -3,6 +3,8 @@ package kz.danke.kids.shop.exceptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -18,8 +20,9 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Order(-2)
-@Slf4j
 public class GlobalExceptionHandler extends WebFluxResponseStatusExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final ObjectMapper objectMapper;
 

@@ -8,6 +8,8 @@ import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import kz.danke.kids.shop.service.searching.QueryCreator;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.http.codec.multipart.Part;
@@ -21,8 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Slf4j
 public class ClothServiceImpl implements ClothService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClothServiceImpl.class);
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
     private final QueryCreator<Cloth, PublicSearchingObject> clothTextSearching;

@@ -4,6 +4,8 @@ import kz.danke.kids.shop.document.PromotionCard;
 import kz.danke.kids.shop.repository.PromotionCartReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.PromotionService;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.Part;
@@ -16,8 +18,9 @@ import java.util.Base64;
 import java.util.UUID;
 
 @Service
-@Slf4j
 public class PromotionServiceImpl implements PromotionService {
+
+    private static final Logger log = LoggerFactory.getLogger(PromotionServiceImpl.class);
 
     private final PromotionCartReactiveElasticsearchRepositoryImpl promotionRepository;
 

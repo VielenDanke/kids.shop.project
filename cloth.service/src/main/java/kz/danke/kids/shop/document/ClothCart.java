@@ -4,17 +4,54 @@ import lombok.*;
 
 import java.util.Objects;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ClothCart {
 
     private String id;
     private Integer age;
     private String height;
     private Integer amount;
+
+    public ClothCart() {
+    }
+
+    public ClothCart(String id, Integer age, String height, Integer amount) {
+        this.id = id;
+        this.age = age;
+        this.height = height;
+        this.amount = amount;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getHeight() {
+        return height;
+    }
+
+    public void setHeight(String height) {
+        this.height = height;
+    }
+
+    public Integer getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
+    }
 
     @Override
     public boolean equals(Object o) {
