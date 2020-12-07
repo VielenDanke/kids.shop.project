@@ -30,26 +30,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsWebFilter corsWebFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return new CorsWebFilter(source);
-    }
-
-
-    @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity httpSecurity,
-            AuthFilter authFilter,
-            CorsWebFilter corsWebFilter
+            AuthFilter authFilter
     ) {
         httpSecurity
                 .csrf()
@@ -63,7 +46,6 @@ public class SecurityConfig {
                 .authenticated()
                 .and()
                 .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC)
-                .addFilterAt(corsWebFilter, SecurityWebFiltersOrder.CORS)
                 .httpBasic()
                 .disable()
                 .formLogin()

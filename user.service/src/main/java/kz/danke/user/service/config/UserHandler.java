@@ -51,7 +51,6 @@ public class UserHandler {
         final String stateMachineID = UUID.randomUUID().toString();
 
         return serverRequest.bodyToMono(Cart.class)
-                .flatMap(userService::reserveCartShop)
                 .doOnNext(cart -> {
                     StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
                     stateMachine.getExtendedState().getVariables().put(CLOTH_CART_KEY, jsonObjectMapper.serializeObject(cart));
@@ -62,7 +61,21 @@ public class UserHandler {
                         Mono.defer(() -> Mono.error(new RuntimeException()));
                     }
                 })
-                .flatMap(cart -> ServerResponse.ok().header("STATE_ID", stateMachineID).body(Mono.just(cart), Cart.class))
+                .flatMap(cart -> {
+                    StateMachine<PurchaseState, PurchaseEvent> restoredStateMachine = stateMachineFactory.getStateMachine();
+                    try {
+                        stateMachinePersister
+                                .restore(restoredStateMachine, stateMachineID);
+                    } catch (Exception e) {
+                        Mono.defer(() -> Mono.error(new RuntimeException()));
+                    }
+                    return ServerResponse.ok().header("STATE_ID", stateMachineID).body(Mono.just(
+                            jsonObjectMapper.deserializeJson(
+                                    (String) restoredStateMachine.getExtendedState().getVariables().get(CLOTH_CART_KEY),
+                                    Cart.class
+                            )
+                    ), Cart.class);
+                })
                 .onErrorResume(ClothCartNotFoundException.class, ex ->
                         createServerResponse(ex, ex.getResponseStatus(), serverRequest)
                 )

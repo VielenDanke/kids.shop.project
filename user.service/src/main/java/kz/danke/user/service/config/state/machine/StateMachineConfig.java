@@ -4,10 +4,10 @@ import kz.danke.user.service.config.state.machine.actions.*;
 import kz.danke.user.service.config.state.machine.listener.PurchaseStateMachineEventListener;
 import kz.danke.user.service.config.state.machine.persister.InMemoryStateMachinePersist;
 import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.user.service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.statemachine.StateMachinePersist;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
@@ -26,10 +26,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
     public static final String CLOTH_CART_KEY = "CLOTH_CART";
 
     private final JsonObjectMapper jsonObjectMapper;
+    private final UserService userService;
 
     @Autowired
-    public StateMachineConfig(JsonObjectMapper jsonObjectMapper) {
+    public StateMachineConfig(JsonObjectMapper jsonObjectMapper, UserService userService) {
         this.jsonObjectMapper = jsonObjectMapper;
+        this.userService = userService;
     }
 
     @Override
@@ -78,7 +80,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
 
     @Bean
     public Action<PurchaseState, PurchaseEvent> reserveAction() {
-        return new ReserveAction(jsonObjectMapper);
+        return new ReserveAction(jsonObjectMapper, userService);
     }
 
     @Bean
