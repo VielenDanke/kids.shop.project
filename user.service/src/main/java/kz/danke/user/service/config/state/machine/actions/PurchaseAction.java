@@ -2,8 +2,8 @@ package kz.danke.user.service.config.state.machine.actions;
 
 import kz.danke.user.service.config.state.machine.PurchaseEvent;
 import kz.danke.user.service.config.state.machine.PurchaseState;
+import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.ClothCart;
-import kz.danke.user.service.dto.ClothCartList;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
@@ -24,7 +24,7 @@ public class PurchaseAction implements Action<PurchaseState, PurchaseEvent> {
     public void execute(StateContext<PurchaseState, PurchaseEvent> stateContext) {
         String clothCartList = stateContext.getExtendedState().get(CLOTH_CART_KEY, String.class);
 
-        ClothCartList clothCart = jsonObjectMapper.deserializeJson(clothCartList, ClothCartList.class);
+        Cart clothCart = jsonObjectMapper.deserializeJson(clothCartList, Cart.class);
 
         List<ClothCart> clothes = clothCart.getClothCartList();
     }

@@ -14,7 +14,7 @@ public class UserRoutesConfig {
     public RouterFunction<ServerResponse> userRoutes(UserHandler userHandler) {
         return RouterFunctions
                 .route(
-                        RequestPredicates.POST("/cart/validate"),
+                        RequestPredicates.POST("/cart/reserve"),
                         userHandler::handleCartProcess
                 )
                 .andRoute(

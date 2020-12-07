@@ -10,7 +10,7 @@ public interface UserService {
 
     Mono<User> saveNewUser(User user);
 
-    Mono<Cart> validateCartShop(Cart cart);
+    Mono<Cart> reserveCartShop(Cart cart);
 
     Mono<ChargeResponse> processCartShop(ChargeRequest chargeRequest);
 

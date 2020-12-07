@@ -2,16 +2,20 @@ package kz.danke.user.service.config.state.machine;
 
 import kz.danke.user.service.config.state.machine.actions.*;
 import kz.danke.user.service.config.state.machine.listener.PurchaseStateMachineEventListener;
+import kz.danke.user.service.config.state.machine.persister.InMemoryStateMachinePersist;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.StateMachinePersist;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
 
 import java.util.EnumSet;
 
@@ -95,5 +99,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
     @Bean
     public Action<PurchaseState, PurchaseEvent> errorAction() {
         return new ErrorAction();
+    }
+
+    @Bean
+    public StateMachinePersister<PurchaseState, PurchaseEvent, String> inMemoryStateMachinePersister() {
+        return new DefaultStateMachinePersister<>(new InMemoryStateMachinePersist());
     }
 }

@@ -91,7 +91,7 @@ public class ClothHandler {
                 );
     }
 
-    public Mono<ServerResponse> checkIfAmountEnough(ServerRequest serverRequest) {
+    public Mono<ServerResponse> reserveEnoughClothAmount(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(Cart.class)
                 .map(Cart::getClothCartList)
                 .flatMap(clothCartList -> {
@@ -113,11 +113,15 @@ public class ClothHandler {
                                         if (lineSizeFromCloth.getAmount() - cr.getAmount() < 0) {
                                             return null;
                                         }
+                                        lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
+                                        lineSizes.add(i, lineSizeFromCloth);
+                                        cloth.setLineSizes(lineSizes);
                                     }
                                 }
                                 return cloth;
                             })
                             .filter(Objects::nonNull)
+                            .flatMap(clothService::saveWithoutSetId)
                             .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotEnoughAmountException("Not enough cloth, cart empty"))))
                             .map(Cloth::getId)
                             .collectList();

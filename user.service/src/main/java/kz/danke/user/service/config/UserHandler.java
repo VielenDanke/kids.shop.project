@@ -1,5 +1,7 @@
 package kz.danke.user.service.config;
 
+import kz.danke.user.service.config.state.machine.PurchaseEvent;
+import kz.danke.user.service.config.state.machine.PurchaseState;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
@@ -11,27 +13,56 @@ import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.ResponseFailed;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.exception.UserNotFoundException;
+import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
+import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOTH_CART_KEY;
+
 @Component
 public class UserHandler {
 
     private final UserService userService;
+    private final StateMachineFactory<PurchaseState, PurchaseEvent> stateMachineFactory;
+    private final JsonObjectMapper jsonObjectMapper;
+    private final StateMachinePersister<PurchaseState, PurchaseEvent, String> stateMachinePersister;
 
     @Autowired
-    public UserHandler(UserService userService) {
+    public UserHandler(UserService userService,
+                       StateMachineFactory<PurchaseState, PurchaseEvent> stateMachineFactory,
+                       JsonObjectMapper jsonObjectMapper,
+                       StateMachinePersister<PurchaseState, PurchaseEvent, String> stateMachinePersister) {
         this.userService = userService;
+        this.stateMachineFactory = stateMachineFactory;
+        this.jsonObjectMapper = jsonObjectMapper;
+        this.stateMachinePersister = stateMachinePersister;
     }
 
     public Mono<ServerResponse> handleCartProcess(ServerRequest serverRequest) {
+        final String stateMachineID = UUID.randomUUID().toString();
+
         return serverRequest.bodyToMono(Cart.class)
-                .flatMap(userService::validateCartShop)
-                .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class))
+                .flatMap(userService::reserveCartShop)
+                .doOnNext(cart -> {
+                    StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
+                    stateMachine.getExtendedState().getVariables().put(CLOTH_CART_KEY, jsonObjectMapper.serializeObject(cart));
+                    stateMachine.sendEvent(PurchaseEvent.RESERVE);
+                    try {
+                        stateMachinePersister.persist(stateMachine, stateMachineID);
+                    } catch (Exception e) {
+                        Mono.defer(() -> Mono.error(new RuntimeException()));
+                    }
+                })
+                .flatMap(cart -> ServerResponse.ok().header("STATE_ID", stateMachineID).body(Mono.just(cart), Cart.class))
                 .onErrorResume(ClothCartNotFoundException.class, ex ->
                         createServerResponse(ex, ex.getResponseStatus(), serverRequest)
                 )

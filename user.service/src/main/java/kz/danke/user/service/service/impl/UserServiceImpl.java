@@ -57,9 +57,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<Cart> validateCartShop(Cart cart) {
-        return getPrincipalFromSecurityContext()
-                .then(this.getOnlyEnoughClothAmount(cart));
+    public Mono<Cart> reserveCartShop(Cart cart) {
+        return this.reserveOnlyEnoughAmountOfCloth(cart);
     }
 
     @Override
@@ -69,10 +68,10 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private Mono<Cart> getOnlyEnoughClothAmount(Cart cart) {
+    private Mono<Cart> reserveOnlyEnoughAmountOfCloth(Cart cart) {
         return webClient
                 .post()
-                .uri("http://cloth-ms/clothes/validate")
+                .uri("http://cloth-ms/clothes/reserve")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(cart), Cart.class)

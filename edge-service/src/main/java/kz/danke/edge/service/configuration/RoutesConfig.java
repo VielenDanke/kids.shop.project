@@ -196,7 +196,7 @@ public class RoutesConfig {
                         userCartValidate -> userCartValidate
                                 .method(HttpMethod.POST)
                                 .and()
-                                .path("/cart/validate")
+                                .path("/cart/reserve")
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
                                     retryConfig = globalRetryConfig;
                                     retryConfig.setMethods(HttpMethod.POST);
