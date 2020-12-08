@@ -141,7 +141,6 @@ public class SecurityConfig {
                 "/cabinet"
         };
         String[] postMatchers = new String[]{
-                "/cart/process",
                 "/clothes/*/files",
                 "/clothes",
                 "/categories",
@@ -194,6 +193,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
                 .pathMatchers("/auth/login").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/reserve").permitAll()
+                .pathMatchers(HttpMethod.POST, "/cart/process").permitAll()
                 .pathMatchers("/login/oauth2/code/*").permitAll()
                 .pathMatchers("/oauth2/authorization/*").permitAll()
                 .pathMatchers("/oauth2/user/registration").permitAll()

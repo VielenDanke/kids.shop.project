@@ -26,7 +26,7 @@ public class User {
     @Field(type = FieldType.Text)
     private String firsName;
     @Field(type = FieldType.Text)
-    private String surname;
+    private String lastName;
     @Field(type = FieldType.Text)
     private String address;
     @Field(type = FieldType.Text)

@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .permitAll()
                 .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/reserve").permitAll()
+                .pathMatchers(HttpMethod.POST, "/cart/process").permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
@@ -68,9 +69,7 @@ public class SecurityConfig {
                 "/cabinet"
         };
 
-        String[] postMatchers = new String[]{
-                "/cart/process"
-        };
+        String[] postMatchers = new String[]{};
 
         String[] deleteMatchers = new String[]{
 

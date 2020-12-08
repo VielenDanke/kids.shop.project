@@ -9,13 +9,13 @@ import kz.danke.user.service.dto.request.RegistrationRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
 import kz.danke.user.service.dto.response.RegistrationResponse;
 import kz.danke.user.service.dto.response.UserCabinetResponse;
-import kz.danke.user.service.exception.ClothCartNotFoundException;
-import kz.danke.user.service.exception.ResponseFailed;
-import kz.danke.user.service.exception.UserNotAuthorizedException;
-import kz.danke.user.service.exception.UserNotFoundException;
+import kz.danke.user.service.exception.*;
 import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.persist.StateMachinePersister;
@@ -30,6 +30,8 @@ import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOT
 
 @Component
 public class UserHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserHandler.class);
 
     private final UserService userService;
     private final StateMachineFactory<PurchaseState, PurchaseEvent> stateMachineFactory;
@@ -58,7 +60,9 @@ public class UserHandler {
                     try {
                         stateMachinePersister.persist(stateMachine, stateMachineID);
                     } catch (Exception e) {
-                        Mono.defer(() -> Mono.error(new RuntimeException()));
+                        String localizedMessage = e.getLocalizedMessage();
+                        LOGGER.error("Error during state persisting occurred {}", localizedMessage);
+                        Mono.defer(() -> Mono.error(new StateMachinePersistingException(localizedMessage)));
                     }
                 })
                 .flatMap(cart -> {
@@ -67,14 +71,17 @@ public class UserHandler {
                         stateMachinePersister
                                 .restore(restoredStateMachine, stateMachineID);
                     } catch (Exception e) {
-                        Mono.defer(() -> Mono.error(new RuntimeException()));
+                        Mono.defer(() -> Mono.error(new StateMachinePersistingException(e.getLocalizedMessage())));
                     }
-                    return ServerResponse.ok().header("STATE_ID", stateMachineID).body(Mono.just(
-                            jsonObjectMapper.deserializeJson(
-                                    (String) restoredStateMachine.getExtendedState().getVariables().get(CLOTH_CART_KEY),
-                                    Cart.class
-                            )
-                    ), Cart.class);
+                    return ServerResponse.ok()
+                            .header("STATE_ID", stateMachineID)
+                            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "STATE_ID")
+                            .body(Mono.just(
+                                    jsonObjectMapper.deserializeJson(
+                                            (String) restoredStateMachine.getExtendedState().getVariables().get(CLOTH_CART_KEY),
+                                            Cart.class
+                                    )
+                            ), Cart.class);
                 })
                 .onErrorResume(ClothCartNotFoundException.class, ex ->
                         createServerResponse(ex, ex.getResponseStatus(), serverRequest)
@@ -84,9 +91,22 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> handleChargeProcess(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(ChargeRequest.class)
-                .flatMap(userService::processCartShop)
-                .flatMap(chargeResponse -> ServerResponse.ok().body(Mono.just(chargeResponse), ChargeResponse.class))
+        final String stateID = serverRequest.headers().firstHeader("STATE_ID");
+
+        return Mono.justOrEmpty(stateID)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
+                .doOnNext(stID -> {
+                    StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
+                    try {
+                        stateMachinePersister.restore(stateMachine, stID);
+                        stateMachine.sendEvent(PurchaseEvent.BUY);
+                    } catch (Exception e) {
+                        Mono.defer(() -> Mono.error(new StateMachinePersistingException("State machine exception")));
+                    }
+                })
+                .flatMap(stID -> ServerResponse.ok().body(Mono.just(
+                        String.format("Charge successfully processed with STATE_ID: %s", stID)
+                ), String.class))
                 .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
                 .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
     }

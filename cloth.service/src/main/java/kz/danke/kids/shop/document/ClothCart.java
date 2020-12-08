@@ -10,15 +10,25 @@ public class ClothCart {
     private Integer age;
     private String height;
     private Integer amount;
+    private Integer price;
 
     public ClothCart() {
     }
 
-    public ClothCart(String id, Integer age, String height, Integer amount) {
+    public ClothCart(String id, Integer age, String height, Integer amount, Integer price) {
         this.id = id;
         this.age = age;
         this.height = height;
         this.amount = amount;
+        this.price = price;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
     }
 
     public String getId() {

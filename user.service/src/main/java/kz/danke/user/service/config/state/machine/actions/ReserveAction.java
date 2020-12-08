@@ -8,6 +8,7 @@ import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.UserService;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
@@ -34,6 +35,6 @@ public class ReserveAction implements Action<PurchaseState, PurchaseEvent> {
                         stateContext.getExtendedState().getVariables().put(
                                 CLOTH_CART_KEY, jsonObjectMapper.serializeObject(cart)
                         )
-                );
+                ).subscribe();
     }
 }
