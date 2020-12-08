@@ -39,7 +39,7 @@ public class EdgeServiceApplication {
 					.address("address")
 					.cart(new Cart())
 					.firsName("firstName")
-					.surname("surname")
+					.lastName("surname")
 					.phoneNumber("87777777777")
 					.build();
 			User second = User.builder()
@@ -50,7 +50,7 @@ public class EdgeServiceApplication {
 					.address("address")
 					.cart(new Cart())
 					.firsName("firstName")
-					.surname("surname")
+					.lastName("surname")
 					.phoneNumber("87777777777")
 					.build();
 

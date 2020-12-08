@@ -13,6 +13,20 @@ public class ChargeRequest {
 
     private String firstName;
     private String lastName;
-    private Integer amount;
-    private String currency;
+    private String city;
+    private String address;
+    private String phoneNumber;
+    private String email;
+
+    @Override
+    public String toString() {
+        return "ChargeRequest{" +
+                "firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", city='" + city + '\'' +
+                ", address='" + address + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

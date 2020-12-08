@@ -114,7 +114,8 @@ public class ClothHandler {
                                             return null;
                                         }
                                         lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
-                                        lineSizes.add(i, lineSizeFromCloth);
+                                        lineSizes.removeIf(ls -> ls.equals(lineSizeFromCloth));
+                                        lineSizes.add(lineSizeFromCloth);
                                         cloth.setLineSizes(lineSizes);
                                     }
                                 }

@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOTH_CART_KEY;
+import static kz.danke.user.service.config.state.machine.actions.PurchaseAction.USER_DATA_KEY;
 
 @Component
 public class UserHandler {
@@ -93,16 +94,20 @@ public class UserHandler {
     public Mono<ServerResponse> handleChargeProcess(ServerRequest serverRequest) {
         final String stateID = serverRequest.headers().firstHeader("STATE_ID");
 
-        return Mono.justOrEmpty(stateID)
+        return serverRequest.bodyToMono(ChargeRequest.class)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
-                .doOnNext(stID -> {
+                .map(chargeRequest -> {
                     StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
                     try {
-                        stateMachinePersister.restore(stateMachine, stID);
+                        stateMachinePersister.restore(stateMachine, stateID);
+                        stateMachine.getExtendedState().getVariables().put(
+                                USER_DATA_KEY, jsonObjectMapper.serializeObject(chargeRequest)
+                        );
                         stateMachine.sendEvent(PurchaseEvent.BUY);
                     } catch (Exception e) {
                         Mono.defer(() -> Mono.error(new StateMachinePersistingException("State machine exception")));
                     }
+                    return stateID;
                 })
                 .flatMap(stID -> ServerResponse.ok().body(Mono.just(
                         String.format("Charge successfully processed with STATE_ID: %s", stID)

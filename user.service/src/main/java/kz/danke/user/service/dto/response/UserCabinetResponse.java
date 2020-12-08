@@ -27,7 +27,7 @@ public class UserCabinetResponse {
                 user.getId(),
                 user.getUsername(),
                 user.getFirsName(),
-                user.getSurname(),
+                user.getLastName(),
                 user.getAddress(),
                 user.getCity(),
                 user.getPhoneNumber(),
