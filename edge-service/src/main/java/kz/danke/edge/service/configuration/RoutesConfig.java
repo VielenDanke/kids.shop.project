@@ -192,11 +192,35 @@ public class RoutesConfig {
                                 .uri("lb://cloth-ms")
                 )
                 .route(
+                        "user-cart-decline",
+                        userCartDecline -> userCartDecline
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/cart/reserve/decline")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
+                                .uri("lb://user-ms")
+                )
+                .route(
                         "user-cart-validate",
                         userCartValidate -> userCartValidate
                                 .method(HttpMethod.POST)
                                 .and()
                                 .path("/cart/reserve")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
+                                .uri("lb://user-ms")
+                )
+                .route(
+                        "user-cart-valid-retrieve",
+                        userCartValidRetrieve -> userCartValidRetrieve
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/cart/retrieve")
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
                                     retryConfig = globalRetryConfig;
                                     retryConfig.setMethods(HttpMethod.POST);

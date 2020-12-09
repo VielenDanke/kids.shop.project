@@ -93,4 +93,13 @@ public class LineSize {
     public int hashCode() {
         return Objects.hash(age, height);
     }
+
+    @Override
+    public String toString() {
+        return "LineSize{" +
+                "age=" + age +
+                ", height='" + height + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
 }

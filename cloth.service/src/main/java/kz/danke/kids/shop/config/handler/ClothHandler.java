@@ -4,10 +4,7 @@ import kz.danke.kids.shop.document.*;
 import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.dto.response.ClothSaveResponse;
-import kz.danke.kids.shop.exceptions.ClothNotEnoughAmountException;
-import kz.danke.kids.shop.exceptions.ClothNotFoundException;
-import kz.danke.kids.shop.exceptions.EmptyPathVariableException;
-import kz.danke.kids.shop.exceptions.ResponseFailed;
+import kz.danke.kids.shop.exceptions.*;
 import kz.danke.kids.shop.service.CategoryService;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
@@ -91,7 +88,11 @@ public class ClothHandler {
                 );
     }
 
-    public Mono<ServerResponse> reserveEnoughClothAmount(ServerRequest serverRequest) {
+    public Mono<ServerResponse> processDeclineOrReserve(ServerRequest serverRequest) {
+        String path = serverRequest.path();
+
+        boolean isDecline = path.contains("decline");
+
         return serverRequest.bodyToMono(Cart.class)
                 .map(Cart::getClothCartList)
                 .flatMap(clothCartList -> {
@@ -110,10 +111,14 @@ public class ClothHandler {
                                         }
                                         int i = lineSizes.indexOf(lineSize);
                                         LineSize lineSizeFromCloth = lineSizes.get(i);
-                                        if (lineSizeFromCloth.getAmount() - cr.getAmount() < 0) {
-                                            return null;
+                                        if (isDecline) {
+                                            lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() + cr.getAmount());
+                                        } else {
+                                            if (lineSizeFromCloth.getAmount() - cr.getAmount() < 0) {
+                                                return null;
+                                            }
+                                            lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
                                         }
-                                        lineSizeFromCloth.setAmount(lineSizeFromCloth.getAmount() - cr.getAmount());
                                         lineSizes.removeIf(ls -> ls.equals(lineSizeFromCloth));
                                         lineSizes.add(lineSizeFromCloth);
                                         cloth.setLineSizes(lineSizes);

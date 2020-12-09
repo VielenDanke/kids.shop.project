@@ -12,6 +12,8 @@ public interface UserService {
 
     Mono<Cart> reserveCartShop(Cart cart);
 
+    Mono<Cart> reserveDecline(Cart cart);
+
     Mono<ChargeResponse> processCartShop(ChargeRequest chargeRequest);
 
     Mono<User> getUserInSession();

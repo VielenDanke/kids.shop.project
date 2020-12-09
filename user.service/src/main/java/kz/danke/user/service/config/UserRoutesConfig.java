@@ -18,6 +18,14 @@ public class UserRoutesConfig {
                         userHandler::handleCartProcess
                 )
                 .andRoute(
+                        RequestPredicates.POST("/cart/reserve/decline"),
+                        userHandler::handleCartReserveDecline
+                )
+                .andRoute(
+                        RequestPredicates.POST("/cart/retrieve"),
+                        userHandler::handleCartRetrieve
+                )
+                .andRoute(
                         RequestPredicates.POST("/cart/process"),
                         userHandler::handleChargeProcess
                 )

@@ -40,7 +40,10 @@ public class ClothRouterConfig {
                 clothHandler::handleClothTextSearching
         ).andRoute(
                 RequestPredicates.POST("/clothes/reserve"),
-                clothHandler::reserveEnoughClothAmount
+                clothHandler::processDeclineOrReserve
+        ).andRoute(
+                RequestPredicates.POST("/clothes/reserve/decline"),
+                clothHandler::processDeclineOrReserve
         ).andRoute(
                 RequestPredicates.POST("/categories"),
                 categoryHandler::addCategory

@@ -69,13 +69,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
                 .source(PurchaseState.RESERVED)
                 .target(PurchaseState.PURCHASE_COMPLETE)
                 .event(PurchaseEvent.BUY)
-                .action(purchaseAction(), errorAction())
-                .and()
-                .withExternal()
-                .source(PurchaseState.CANCEL_RESERVED)
-                .target(PurchaseState.RESERVED)
-                .event(PurchaseEvent.RESTORE_RESERVE)
-                .action(restoreAction(), errorAction());
+                .action(purchaseAction(), errorAction());
     }
 
     @Bean
@@ -85,17 +79,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
 
     @Bean
     public Action<PurchaseState, PurchaseEvent> declineAction() {
-        return new DeclineAction(jsonObjectMapper);
+        return new DeclineAction(jsonObjectMapper, userService);
     }
 
     @Bean
     public Action<PurchaseState, PurchaseEvent> purchaseAction() {
         return new PurchaseAction(jsonObjectMapper);
-    }
-
-    @Bean
-    public Action<PurchaseState, PurchaseEvent> restoreAction() {
-        return new RestoreReserve(jsonObjectMapper);
     }
 
     @Bean

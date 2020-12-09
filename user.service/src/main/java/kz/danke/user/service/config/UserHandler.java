@@ -1,24 +1,19 @@
 package kz.danke.user.service.config;
 
-import kz.danke.user.service.config.state.machine.PurchaseEvent;
-import kz.danke.user.service.config.state.machine.PurchaseState;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.request.RegistrationRequest;
-import kz.danke.user.service.dto.response.ChargeResponse;
 import kz.danke.user.service.dto.response.RegistrationResponse;
 import kz.danke.user.service.dto.response.UserCabinetResponse;
 import kz.danke.user.service.exception.*;
 import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.user.service.service.StateMachineProcessingService;
 import kz.danke.user.service.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -26,104 +21,58 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOTH_CART_KEY;
-import static kz.danke.user.service.config.state.machine.actions.PurchaseAction.USER_DATA_KEY;
-
 @Component
 public class UserHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserHandler.class);
 
     private final UserService userService;
-    private final StateMachineFactory<PurchaseState, PurchaseEvent> stateMachineFactory;
     private final JsonObjectMapper jsonObjectMapper;
-    private final StateMachinePersister<PurchaseState, PurchaseEvent, String> stateMachinePersister;
+    private final StateMachineProcessingService stateMachineProcessingService;
 
     @Autowired
     public UserHandler(UserService userService,
-                       StateMachineFactory<PurchaseState, PurchaseEvent> stateMachineFactory,
                        JsonObjectMapper jsonObjectMapper,
-                       StateMachinePersister<PurchaseState, PurchaseEvent, String> stateMachinePersister) {
+                       StateMachineProcessingService stateMachineProcessingService) {
         this.userService = userService;
-        this.stateMachineFactory = stateMachineFactory;
         this.jsonObjectMapper = jsonObjectMapper;
-        this.stateMachinePersister = stateMachinePersister;
+        this.stateMachineProcessingService = stateMachineProcessingService;
     }
 
     public Mono<ServerResponse> handleCartProcess(ServerRequest serverRequest) {
         final String stateMachineID = UUID.randomUUID().toString();
 
         return serverRequest.bodyToMono(Cart.class)
-                .doOnNext(cart -> {
-                    StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
-                    stateMachine.getExtendedState().getVariables().put(CLOTH_CART_KEY, jsonObjectMapper.serializeObject(cart));
-                    stateMachine.sendEvent(PurchaseEvent.RESERVE);
-                    try {
-                        stateMachinePersister.persist(stateMachine, stateMachineID);
-                    } catch (Exception e) {
-                        String localizedMessage = e.getLocalizedMessage();
-                        LOGGER.error("Error during state persisting occurred {}", localizedMessage);
-                        Mono.defer(() -> Mono.error(new StateMachinePersistingException(localizedMessage)));
-                    }
-                })
-                .flatMap(cart -> {
-                    StateMachine<PurchaseState, PurchaseEvent> restoredStateMachine = stateMachineFactory.getStateMachine();
-                    try {
-                        stateMachinePersister
-                                .restore(restoredStateMachine, stateMachineID);
-                    } catch (Exception e) {
-                        Mono.defer(() -> Mono.error(new StateMachinePersistingException(e.getLocalizedMessage())));
-                    }
-                    return ServerResponse.ok()
-                            .header("STATE_ID", stateMachineID)
-                            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "STATE_ID")
-                            .body(Mono.just(
-                                    jsonObjectMapper.deserializeJson(
-                                            (String) restoredStateMachine.getExtendedState().getVariables().get(CLOTH_CART_KEY),
-                                            Cart.class
-                                    )
-                            ), Cart.class);
-                })
+                .doOnNext(cart -> stateMachineProcessingService.processReserve(cart, stateMachineID))
+                .then(ServerResponse.ok()
+                        .header("STATE_ID", stateMachineID)
+                        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "STATE_ID")
+                        .body(Mono.just("Reserve successfully processed"), String.class))
                 .onErrorResume(ClothCartNotFoundException.class, ex ->
                         createServerResponse(ex, ex.getResponseStatus(), serverRequest)
                 )
-                .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
-                .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
+                .onErrorResume(StateMachinePersistingException.class, ex -> createServerResponse(ex, 500, serverRequest));
+    }
+
+    public Mono<ServerResponse> handleCartRetrieve(ServerRequest serverRequest) {
+        final String stateMachineID = serverRequest.headers().firstHeader("STATE_ID");
+
+        return Mono.justOrEmpty(stateMachineID)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
+                .map(stateMachineProcessingService::restoreCartFromStateMachine)
+                .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class))
+                .onErrorResume(HeaderNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
     }
 
     public Mono<ServerResponse> handleChargeProcess(ServerRequest serverRequest) {
         final String stateID = serverRequest.headers().firstHeader("STATE_ID");
 
         return serverRequest.bodyToMono(ChargeRequest.class)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
-                .map(chargeRequest -> {
-                    StateMachine<PurchaseState, PurchaseEvent> stateMachine = stateMachineFactory.getStateMachine();
-                    try {
-                        stateMachinePersister.restore(stateMachine, stateID);
-                        stateMachine.getExtendedState().getVariables().put(
-                                USER_DATA_KEY, jsonObjectMapper.serializeObject(chargeRequest)
-                        );
-                        stateMachine.sendEvent(PurchaseEvent.BUY);
-                    } catch (Exception e) {
-                        Mono.defer(() -> Mono.error(new StateMachinePersistingException("State machine exception")));
-                    }
-                    return stateID;
-                })
-                .flatMap(stID -> ServerResponse.ok().body(Mono.just(
-                        String.format("Charge successfully processed with STATE_ID: %s", stID)
+                .doOnNext(chargeRequest -> stateMachineProcessingService.processChargeEvent(chargeRequest, stateID))
+                .then(ServerResponse.ok().body(Mono.just(
+                        String.format("Charge successfully processed with STATE_ID: %s", stateID)
                 ), String.class))
-                .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
-                .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
-    }
-
-    private Mono<ServerResponse> createServerResponse(Exception ex, Integer status, ServerRequest request) {
-        return ServerResponse
-                .status(status)
-                .body(Mono.just(new ResponseFailed(
-                        ex.toString(),
-                        ex.getLocalizedMessage(),
-                        request.path())
-                ), ResponseFailed.class);
+                .onErrorResume(StateMachinePersistingException.class, ex -> createServerResponse(ex, 500, serverRequest));
     }
 
     public Mono<ServerResponse> getUserCabinet(ServerRequest serverRequest) {
@@ -144,5 +93,27 @@ public class UserHandler {
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class
                 ));
+    }
+
+    public Mono<ServerResponse> handleCartReserveDecline(ServerRequest serverRequest) {
+        final String stateID = serverRequest.headers().firstHeader("STATE_ID");
+
+        return Mono.justOrEmpty(stateID)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
+                .doOnNext(stID -> stateMachineProcessingService.processReserveDecline(stateID))
+                .then(ServerResponse.ok().body(Mono.just(
+                        String.format("Decline successfully processed, STATE_ID: %s", stateID)
+                ), String.class))
+                .onErrorResume(StateMachinePersistingException.class, ex -> createServerResponse(ex, 500, serverRequest));
+    }
+
+    private Mono<ServerResponse> createServerResponse(Exception ex, Integer status, ServerRequest request) {
+        return ServerResponse
+                .status(status)
+                .body(Mono.just(new ResponseFailed(
+                        ex.toString(),
+                        ex.getLocalizedMessage(),
+                        request.path())
+                ), ResponseFailed.class);
     }
 }

@@ -58,7 +58,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Cart> reserveCartShop(Cart cart) {
-        return this.reserveOnlyEnoughAmountOfCloth(cart);
+        final String clothServiceUrl = "http://cloth-ms/clothes/reserve";
+        return this.reserveOrDeclineWebRequest(cart, clothServiceUrl);
     }
 
     @Override
@@ -68,10 +69,16 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private Mono<Cart> reserveOnlyEnoughAmountOfCloth(Cart cart) {
+    @Override
+    public Mono<Cart> reserveDecline(Cart cart) {
+        final String clothServiceUrl = "http://cloth-ms/clothes/reserve/decline";
+        return this.reserveOrDeclineWebRequest(cart, clothServiceUrl);
+    }
+
+    private Mono<Cart> reserveOrDeclineWebRequest(Cart cart, String url) {
         return webClient
                 .post()
-                .uri("http://cloth-ms/clothes/reserve")
+                .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(cart), Cart.class)

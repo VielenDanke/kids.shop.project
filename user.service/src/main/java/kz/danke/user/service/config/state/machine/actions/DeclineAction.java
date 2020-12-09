@@ -5,6 +5,7 @@ import kz.danke.user.service.config.state.machine.PurchaseState;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.ClothCart;
 import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.user.service.service.UserService;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 
@@ -15,9 +16,11 @@ import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOT
 public class DeclineAction implements Action<PurchaseState, PurchaseEvent> {
 
     private final JsonObjectMapper jsonObjectMapper;
+    private final UserService userService;
 
-    public DeclineAction(JsonObjectMapper jsonObjectMapper) {
+    public DeclineAction(JsonObjectMapper jsonObjectMapper, UserService userService) {
         this.jsonObjectMapper = jsonObjectMapper;
+        this.userService = userService;
     }
 
     @Override
@@ -26,6 +29,11 @@ public class DeclineAction implements Action<PurchaseState, PurchaseEvent> {
 
         Cart clothCart = jsonObjectMapper.deserializeJson(clothCartList, Cart.class);
 
-        List<ClothCart> clothes = clothCart.getClothCartList();
+        userService.reserveDecline(clothCart)
+                .doOnNext(cart ->
+                        stateContext.getExtendedState().getVariables().put(
+                                CLOTH_CART_KEY, null
+                        )
+                ).subscribe();
     }
 }

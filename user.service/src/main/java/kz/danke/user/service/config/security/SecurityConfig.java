@@ -43,6 +43,8 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/reserve").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/process").permitAll()
+                .pathMatchers(HttpMethod.POST, "/cart/reserve/decline").permitAll()
+                .pathMatchers(HttpMethod.POST, "/cart/retrieve").permitAll()
                 .anyExchange()
                 .authenticated()
                 .and()
