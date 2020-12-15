@@ -1,5 +1,6 @@
 package kz.danke.kids.shop.config;
 
+import kz.danke.kids.shop.config.elastic.ElasticsearchCreationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;

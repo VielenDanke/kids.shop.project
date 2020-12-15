@@ -5,6 +5,7 @@ import kz.danke.edge.service.exception.ElasticsearchIndexPolicyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class ElasticsearchCreationListener implements ApplicationListener<ApplicationReadyEvent> {
+public class ElasticsearchCreationListener implements ApplicationListener<ApplicationStartedEvent> {
 
     private final AppConfigProperties appConfigProperties;
     private final Package[] packages = Package.getPackages();
@@ -32,7 +33,7 @@ public class ElasticsearchCreationListener implements ApplicationListener<Applic
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+    public void onApplicationEvent(ApplicationStartedEvent applicationStartedEvent) {
         final String dot = ".";
 
         Set<String> indices = appConfigProperties.getElasticsearch()

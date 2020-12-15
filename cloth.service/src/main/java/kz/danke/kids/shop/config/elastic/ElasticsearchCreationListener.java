@@ -1,13 +1,13 @@
-package kz.danke.kids.shop.config;
+package kz.danke.kids.shop.config.elastic;
 
+import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class ElasticsearchCreationListener implements ApplicationListener<ApplicationReadyEvent> {
+public class ElasticsearchCreationListener implements ApplicationListener<ApplicationStartedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticsearchCreationListener.class);
 
@@ -37,7 +37,7 @@ public class ElasticsearchCreationListener implements ApplicationListener<Applic
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+    public void onApplicationEvent(ApplicationStartedEvent applicationStartedEvent) {
         final String dot = ".";
 
         Set<String> indices = appConfigProperties.getElasticsearch()

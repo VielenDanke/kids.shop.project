@@ -1,5 +1,6 @@
-package kz.danke.kids.shop.config;
+package kz.danke.kids.shop.config.elastic;
 
+import kz.danke.kids.shop.config.AppConfigProperties;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

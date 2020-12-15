@@ -1,4 +1,4 @@
-package kz.danke.kids.shop.config;
+package kz.danke.kids.shop.config.elastic;
 
 public enum ElasticsearchCreationPolicy {
 
