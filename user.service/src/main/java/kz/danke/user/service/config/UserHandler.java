@@ -4,6 +4,7 @@ import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.request.RegistrationRequest;
+import kz.danke.user.service.dto.request.UserUpdateRequest;
 import kz.danke.user.service.dto.response.RegistrationResponse;
 import kz.danke.user.service.dto.response.UserCabinetResponse;
 import kz.danke.user.service.exception.*;
@@ -115,5 +116,9 @@ public class UserHandler {
                         ex.getLocalizedMessage(),
                         request.path())
                 ), ResponseFailed.class);
+    }
+
+    public Mono<ServerResponse> updateUser(ServerRequest serverRequest) {
+        return null;
     }
 }

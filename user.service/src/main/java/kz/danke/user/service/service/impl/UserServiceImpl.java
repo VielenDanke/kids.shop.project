@@ -4,6 +4,7 @@ import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
+import kz.danke.user.service.dto.request.UserUpdateRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
 import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
@@ -47,6 +48,20 @@ public class UserServiceImpl implements UserService {
                     u.setId(UUID.randomUUID().toString());
                     u.setPassword(passwordEncoder.encode(u.getPassword()));
                     u.setAuthorities(Collections.singleton(Authorities.ROLE_USER.name()));
+                })
+                .flatMap(reactiveUserRepository::save);
+    }
+
+    @Override
+    public Mono<User> updateUser(UserUpdateRequest request) {
+        return reactiveUserRepository.findById(request.getId())
+                .doOnNext(user -> {
+                    user.setAddress(request.getAddress());
+                    user.setPhoneNumber(request.getPhoneNumber());
+                    user.setCity(request.getCity());
+                    user.setFirstName(request.getFirstName());
+                    user.setLastName(request.getLastName());
+                    user.setUsername(request.getUsername());
                 })
                 .flatMap(reactiveUserRepository::save);
     }

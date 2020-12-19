@@ -24,7 +24,7 @@ public class User {
     @Field(type = FieldType.Text)
     private String password;
     @Field(type = FieldType.Text)
-    private String firsName;
+    private String firstName;
     @Field(type = FieldType.Text)
     private String lastName;
     @Field(type = FieldType.Text)
@@ -35,8 +35,6 @@ public class User {
     private String phoneNumber;
     @Field(type = FieldType.Text)
     private Set<String> authorities;
-    @Field(type = FieldType.Nested, includeInParent = true)
-    private Cart cart;
 
     @Override
     public boolean equals(Object o) {

@@ -35,8 +35,6 @@ public class User {
     private String phoneNumber;
     @Field(type = FieldType.Text)
     private Set<String> authorities;
-    @Field(type = FieldType.Nested, includeInParent = true)
-    private Cart cart;
 
     @Override
     public boolean equals(Object o) {

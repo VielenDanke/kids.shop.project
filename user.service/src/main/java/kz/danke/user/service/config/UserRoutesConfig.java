@@ -36,6 +36,9 @@ public class UserRoutesConfig {
                 .andRoute(
                         RequestPredicates.POST("/auth/registration"),
                         userHandler::saveNewUser
+                ).andRoute(
+                        RequestPredicates.POST("/cabinet/update"),
+                        userHandler::updateUser
                 );
     }
 }

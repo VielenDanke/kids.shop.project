@@ -1,6 +1,5 @@
 package kz.danke.user.service.dto.response;
 
-import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,23 +14,21 @@ public class UserCabinetResponse {
 
     private String id;
     private String username;
-    private String firsName;
-    private String surname;
+    private String firstName;
+    private String lastName;
     private String address;
     private String city;
     private String phoneNumber;
-    private Cart cart;
 
     public static UserCabinetResponse toUserCabinetResponse(User user) {
         return new UserCabinetResponse(
                 user.getId(),
                 user.getUsername(),
-                user.getFirsName(),
+                user.getFirstName(),
                 user.getLastName(),
                 user.getAddress(),
                 user.getCity(),
-                user.getPhoneNumber(),
-                user.getCart()
+                user.getPhoneNumber()
         );
     }
 }
