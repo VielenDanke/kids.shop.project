@@ -2,7 +2,6 @@ package kz.danke.edge.service;
 
 import kz.danke.edge.service.configuration.AppConfigProperties;
 import kz.danke.edge.service.document.Authorities;
-import kz.danke.edge.service.document.Cart;
 import kz.danke.edge.service.document.User;
 import kz.danke.edge.service.repository.ReactiveUserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -37,7 +36,7 @@ public class EdgeServiceApplication {
 					.password(passwordEncoder.encode("qwert"))
 					.authorities(Collections.singleton(Authorities.ROLE_USER.name()))
 					.address("address")
-					.firsName("firstName")
+					.firstName("firstName")
 					.lastName("surname")
 					.city("Karaganda")
 					.phoneNumber("87777777777")
@@ -49,7 +48,7 @@ public class EdgeServiceApplication {
 					.authorities(Collections.singleton(Authorities.ROLE_ADMIN.name()))
 					.address("address")
 					.city("Karaganda")
-					.firsName("firstName")
+					.firstName("firstName")
 					.lastName("surname")
 					.phoneNumber("87777777777")
 					.build();

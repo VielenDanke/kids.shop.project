@@ -261,6 +261,18 @@ public class RoutesConfig {
                                 }))
                                 .uri("lb://user-ms")
                 )
+                .route(
+                        "update-user",
+                        updateUser -> updateUser
+                                .method(HttpMethod.POST)
+                                .and()
+                                .path("/cabinet/update")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                                    retryConfig = globalRetryConfig;
+                                    retryConfig.setMethods(HttpMethod.POST);
+                                }))
+                                .uri("lb://user-ms")
+                )
                 .build();
     }
 }

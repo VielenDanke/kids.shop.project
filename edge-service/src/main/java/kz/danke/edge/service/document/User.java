@@ -24,7 +24,7 @@ public class User {
     @Field(type = FieldType.Text)
     private String password;
     @Field(type = FieldType.Text)
-    private String firsName;
+    private String firstName;
     @Field(type = FieldType.Text)
     private String lastName;
     @Field(type = FieldType.Text)

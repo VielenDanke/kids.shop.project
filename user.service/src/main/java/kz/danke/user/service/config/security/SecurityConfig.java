@@ -71,7 +71,9 @@ public class SecurityConfig {
                 "/cabinet"
         };
 
-        String[] postMatchers = new String[]{};
+        String[] postMatchers = new String[]{
+                "/cabinet/update"
+        };
 
         String[] deleteMatchers = new String[]{
 

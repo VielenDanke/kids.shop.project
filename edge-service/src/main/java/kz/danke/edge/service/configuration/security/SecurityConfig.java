@@ -145,7 +145,8 @@ public class SecurityConfig {
                 "/clothes",
                 "/categories",
                 "/promotions",
-                "/promotions/*/file"
+                "/promotions/*/file",
+                "/cabinet/update"
         };
         String[] deleteMatchers = new String[]{
                 "/promotions/*",

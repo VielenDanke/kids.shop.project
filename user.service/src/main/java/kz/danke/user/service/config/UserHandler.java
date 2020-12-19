@@ -1,5 +1,6 @@
 package kz.danke.user.service.config;
 
+import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
@@ -14,6 +15,7 @@ import kz.danke.user.service.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -30,14 +32,20 @@ public class UserHandler {
     private final UserService userService;
     private final JsonObjectMapper jsonObjectMapper;
     private final StateMachineProcessingService stateMachineProcessingService;
+    private final JwtService<String> jwtService;
+
+    @Value("${auth.token.key}")
+    private String authTokenKey;
 
     @Autowired
     public UserHandler(UserService userService,
                        JsonObjectMapper jsonObjectMapper,
-                       StateMachineProcessingService stateMachineProcessingService) {
+                       StateMachineProcessingService stateMachineProcessingService,
+                       JwtService<String> jwtService) {
         this.userService = userService;
         this.jsonObjectMapper = jsonObjectMapper;
         this.stateMachineProcessingService = stateMachineProcessingService;
+        this.jwtService = jwtService;
     }
 
     public Mono<ServerResponse> handleCartProcess(ServerRequest serverRequest) {
@@ -108,6 +116,22 @@ public class UserHandler {
                 .onErrorResume(StateMachinePersistingException.class, ex -> createServerResponse(ex, 500, serverRequest));
     }
 
+    public Mono<ServerResponse> updateUser(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(UserUpdateRequest.class)
+                .flatMap(userService::updateUser)
+                .flatMap(user -> {
+                    String token = jwtService.generateToken(user);
+                    UserCabinetResponse userCabinetResponse = UserCabinetResponse.toUserCabinetResponse(user);
+                    return ServerResponse
+                            .ok()
+                            .header(authTokenKey, token)
+                            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, authTokenKey)
+                            .body(Mono.just(userCabinetResponse), UserCabinetResponse.class);
+                })
+                .onErrorResume(UserNotAuthorizedException.class, ex -> createServerResponse(ex, 401, serverRequest))
+                .onErrorResume(UserNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
+    }
+
     private Mono<ServerResponse> createServerResponse(Exception ex, Integer status, ServerRequest request) {
         return ServerResponse
                 .status(status)
@@ -116,9 +140,5 @@ public class UserHandler {
                         ex.getLocalizedMessage(),
                         request.path())
                 ), ResponseFailed.class);
-    }
-
-    public Mono<ServerResponse> updateUser(ServerRequest serverRequest) {
-        return null;
     }
 }

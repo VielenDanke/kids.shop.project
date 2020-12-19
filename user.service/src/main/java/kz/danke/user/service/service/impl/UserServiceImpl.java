@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<User> updateUser(UserUpdateRequest request) {
-        return reactiveUserRepository.findById(request.getId())
+        return this.getPrincipalFromSecurityContext()
                 .doOnNext(user -> {
                     user.setAddress(request.getAddress());
                     user.setPhoneNumber(request.getPhoneNumber());
