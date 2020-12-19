@@ -19,8 +19,8 @@ spec:
         image: elasticsearch:7.6.2
         resources:
           limits:
-            memory: "128Mi"
-            cpu: "500m"
+            memory: "1024Mi"
+            cpu: "1024m"
         ports:
           - containerPort: 9200
           - containerPort: 9300
