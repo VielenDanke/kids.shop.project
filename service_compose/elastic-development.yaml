@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastic-deployment
+  labels:
+    app: elastic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic
+  template:
+    metadata:
+      labels:
+        app: elastic
+    spec:
+      containers:
+      - name: elastic
+        image: elasticsearch:7.6.2
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 9200
+          - containerPort: 9300
+        env:
+          - name: "discovery.type"
+            value: "single-node"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elastic-service
+spec:
+  selector:
+    app: elastic
+  type: LoadBalancer  
+  ports:
+  - name: "elastic-first"
+    port: 9200
+    targetPort: 9200
+    nodePort: 30920
+  - name: "elastic-second"
+    port: 9300
+    targetPort: 9300
+    nodePort: 30930
