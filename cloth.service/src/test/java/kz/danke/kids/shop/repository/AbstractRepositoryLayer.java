@@ -2,13 +2,21 @@ package kz.danke.kids.shop.repository;
 
 import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.*;
+import kz.danke.kids.shop.service.searching.PublicSearchingObject;
+import kz.danke.kids.shop.service.searching.QueryCreator;
+import org.junit.ClassRule;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
@@ -19,27 +27,35 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.UUID;
 
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles("test")
+@SpringBootTest
 @TestPropertySource("classpath:application-test.properties")
-@Import({AbstractRepositoryLayer.ElasticsearchConfig.class, AppConfigProperties.class})
+@ContextConfiguration(initializers = AbstractRepositoryLayer.Initializer.class)
 public abstract class AbstractRepositoryLayer {
+
+    private static final String ELASTICSEARCH_DOCKER = "docker.elastic.co/elasticsearch/elasticsearch:7.6.2";
 
     @Autowired
     protected ClothReactiveElasticsearchRepositoryImpl clothRepository;
     @Autowired
-    protected AppConfigProperties properties;
+    protected QueryCreator<Cloth, PublicSearchingObject> queryCreator;
 
-    @Value("${test.containers.elasticsearch.docker_image_name}")
-    private String elasticsearchDockerImageName;
+    @ClassRule
+    public static ElasticsearchContainer container = new ElasticsearchContainer(ELASTICSEARCH_DOCKER);
+
+    static {
+        container.start();
+    }
 
     protected Cloth cloth = Cloth.builder().id(UUID.randomUUID().toString())
             .images(Collections.emptyList())
@@ -62,58 +78,12 @@ public abstract class AbstractRepositoryLayer {
             .category("Jeans")
             .build();
 
-    protected void setupElasticsearchTestContainer() {
-        try (ElasticsearchContainer container = new ElasticsearchContainer(elasticsearchDockerImageName)) {
-            container.start();
-        }
-    }
-
-    @Configuration
-    @EnableReactiveElasticsearchRepositories
-    static class ElasticsearchConfig {
-
-        @Value("${app.elasticsearch.hostAndPor}")
-        private String hostAndPort;
-        @Value("${app.elasticsearch.username}")
-        private String username;
-        @Value("${app.elasticsearch.password}")
-        private String password;
-
-        @Bean("reactiveElasticsearchTemplate")
-        public ReactiveElasticsearchOperations reactiveElasticsearchOperations(
-                ReactiveElasticsearchClient reactiveElasticsearchClient,
-                @Qualifier("mappingElasticsearchConverter") ElasticsearchConverter elasticsearchConverter
-        ) {
-            return new ReactiveElasticsearchTemplate(reactiveElasticsearchClient, elasticsearchConverter);
-        }
-
-        @Bean("mappingElasticsearchConverter")
-        public ElasticsearchConverter mappingElasticsearchConverter(
-                @Qualifier("mappingContext") SimpleElasticsearchMappingContext mappingContext) {
-            return new MappingElasticsearchConverter(mappingContext);
-        }
-
-        @Bean("mappingContext")
-        public SimpleElasticsearchMappingContext mappingContext() {
-            return new SimpleElasticsearchMappingContext();
-        }
-
-        @Bean("reactiveElasticsearchClient")
-        public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                    .connectedTo(hostAndPort)
-//                .usingSsl(Objects.requireNonNull(generateSslContext()))
-                    .withBasicAuth(username, password)
-                    .withWebClientConfigurer(webClient -> {
-                        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-                                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
-                                .build();
-
-                        return webClient.mutate().exchangeStrategies(exchangeStrategies).build();
-                    })
-                    .build();
-
-            return ReactiveRestClients.create(clientConfiguration);
+    static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @Override
+        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+            TestPropertyValues.of(
+                    "app.elasticsearch.hostAndPort=" + container.getHttpHostAddress()
+            ).applyTo(configurableApplicationContext.getEnvironment());
         }
     }
 }

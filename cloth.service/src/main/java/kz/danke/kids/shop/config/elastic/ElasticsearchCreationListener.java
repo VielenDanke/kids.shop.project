@@ -5,7 +5,6 @@ import kz.danke.kids.shop.exceptions.ElasticsearchIndexPolicyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -26,14 +25,12 @@ public class ElasticsearchCreationListener implements ApplicationListener<Applic
     private final AppConfigProperties appConfigProperties;
     private final Package[] packages = Package.getPackages();
     private final ReactiveElasticsearchClient reactiveElasticsearchClient;
-    private final MappingElasticsearchConverter mappingElasticsearchConverter;
 
     @Autowired
     public ElasticsearchCreationListener(AppConfigProperties appConfigProperties,
-                                         ReactiveElasticsearchClient reactiveElasticsearchClient, MappingElasticsearchConverter mappingElasticsearchConverter) {
+                                         ReactiveElasticsearchClient reactiveElasticsearchClient) {
         this.appConfigProperties = appConfigProperties;
         this.reactiveElasticsearchClient = reactiveElasticsearchClient;
-        this.mappingElasticsearchConverter = mappingElasticsearchConverter;
     }
 
     @Override
