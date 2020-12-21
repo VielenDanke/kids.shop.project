@@ -17,51 +17,37 @@ public class ClothRouterConfig {
     public RouterFunction<ServerResponse> clothRouterFunction(
             ClothHandler clothHandler, CategoryHandler categoryHandler, PromotionHandler promotionHandler
     ) {
-        return RouterFunctions.route(
-                RequestPredicates.GET("/clothes"),
-                clothHandler::handleMainPageClothes
-        ).andRoute(
-                RequestPredicates.GET("/clothes/{id}"),
-                clothHandler::handleClothById
-        ).andRoute(
-                RequestPredicates.DELETE("/clothes/{id}"),
-                clothHandler::deleteClothById
-        ).andRoute(
-                RequestPredicates.POST("/clothes"),
-                clothHandler::handleClothSaving
-        ).andRoute(
-                RequestPredicates.POST("/clothes/cart"),
-                clothHandler::handleClothCart
-        ).andRoute(
-                RequestPredicates.POST("/clothes/{id}/files"),
-                clothHandler::handleFileSaving
-        ).andRoute(
-                RequestPredicates.POST("/clothes/searching"),
-                clothHandler::handleClothTextSearching
-        ).andRoute(
-                RequestPredicates.POST("/clothes/reserve"),
-                clothHandler::processDeclineOrReserve
-        ).andRoute(
-                RequestPredicates.POST("/clothes/reserve/decline"),
-                clothHandler::processDeclineOrReserve
-        ).andRoute(
-                RequestPredicates.POST("/categories"),
-                categoryHandler::addCategory
-        ).andRoute(
-                RequestPredicates.GET("/categories"),
-                categoryHandler::finAllCategories
-        ).andRoute(
-                RequestPredicates.POST("/promotions"),
-                promotionHandler::handleSavePromotion
-        ).andRoute(
-                RequestPredicates.GET("/promotions"),
-                promotionHandler::getAllPromotions
-        ).andRoute(
-                RequestPredicates.POST("/promotions/{id}/file"),
-                promotionHandler::handleSaveFileToPromotion
-        ).andRoute(
-                RequestPredicates.DELETE("/promotions/{id}"),
-                promotionHandler::handleDeletePromotion
-        );
+        return RouterFunctions.route()
+                .path("/clothes", builder -> builder
+                        .GET("", clothHandler::handleMainPageClothes)
+                        .POST("", clothHandler::handleClothSaving)
+                        .DELETE("/{id}", clothHandler::deleteClothById)
+                        .GET("/{id}", clothHandler::handleClothById)
+                        .POST("/cart", clothHandler::handleClothCart)
+                        .POST("/{id}/files", clothHandler::handleFileSaving)
+                        .POST("/searching", clothHandler::handleClothTextSearching)
+                        .POST("/reserve", clothHandler::processDeclineOrReserve)
+                        .POST("/reserve/decline", clothHandler::processDeclineOrReserve)
+                )
+                .build()
+                .andRoute(
+                        RequestPredicates.POST("/categories"),
+                        categoryHandler::addCategory
+                ).andRoute(
+                        RequestPredicates.GET("/categories"),
+                        categoryHandler::finAllCategories
+                ).andRoute(
+                        RequestPredicates.POST("/promotions"),
+                        promotionHandler::handleSavePromotion
+                ).andRoute(
+                        RequestPredicates.GET("/promotions"),
+                        promotionHandler::getAllPromotions
+                ).andRoute(
+                        RequestPredicates.POST("/promotions/{id}/file"),
+                        promotionHandler::handleSaveFileToPromotion
+                ).andRoute(
+                        RequestPredicates.DELETE("/promotions/{id}"),
+                        promotionHandler::handleDeletePromotion
+                );
     }
 }
