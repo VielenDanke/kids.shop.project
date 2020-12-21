@@ -5,5 +5,5 @@ import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRe
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PromotionCartReactiveElasticsearchRepositoryImpl extends ReactiveElasticsearchRepository<PromotionCard, String> {
+public interface PromotionCardReactiveElasticsearchRepositoryImpl extends ReactiveElasticsearchRepository<PromotionCard, String> {
 }

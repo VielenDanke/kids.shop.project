@@ -1,13 +1,11 @@
 package kz.danke.kids.shop.service.impl;
 
-import kz.danke.kids.shop.config.AppConfigProperties;
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
 import kz.danke.kids.shop.repository.ClothReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.ClothService;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
 import kz.danke.kids.shop.service.searching.QueryCreator;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -29,14 +27,11 @@ public class ClothServiceImpl implements ClothService {
 
     private final ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl;
     private final QueryCreator<Cloth, PublicSearchingObject> clothTextSearching;
-    private final AppConfigProperties properties;
 
     public ClothServiceImpl(ClothReactiveElasticsearchRepositoryImpl clothReactiveElasticsearchRepositoryImpl,
-                            QueryCreator<Cloth, PublicSearchingObject> clothTextSearching,
-                            AppConfigProperties properties) {
+                            QueryCreator<Cloth, PublicSearchingObject> clothTextSearching) {
         this.clothReactiveElasticsearchRepositoryImpl = clothReactiveElasticsearchRepositoryImpl;
         this.clothTextSearching = clothTextSearching;
-        this.properties = properties;
     }
 
     @Override

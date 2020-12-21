@@ -1,9 +1,8 @@
 package kz.danke.kids.shop.service.impl;
 
 import kz.danke.kids.shop.document.PromotionCard;
-import kz.danke.kids.shop.repository.PromotionCartReactiveElasticsearchRepositoryImpl;
+import kz.danke.kids.shop.repository.PromotionCardReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.PromotionService;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +21,10 @@ public class PromotionServiceImpl implements PromotionService {
 
     private static final Logger log = LoggerFactory.getLogger(PromotionServiceImpl.class);
 
-    private final PromotionCartReactiveElasticsearchRepositoryImpl promotionRepository;
+    private final PromotionCardReactiveElasticsearchRepositoryImpl promotionRepository;
 
     @Autowired
-    public PromotionServiceImpl(PromotionCartReactiveElasticsearchRepositoryImpl promotionRepository) {
+    public PromotionServiceImpl(PromotionCardReactiveElasticsearchRepositoryImpl promotionRepository) {
         this.promotionRepository = promotionRepository;
     }
 
@@ -43,8 +42,7 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public Mono<Void> deletePromotionCardById(String id) {
-        return Mono.just(id)
-                .flatMap(promotionRepository::deleteById);
+        return promotionRepository.deleteById(id);
     }
 
     @Override
