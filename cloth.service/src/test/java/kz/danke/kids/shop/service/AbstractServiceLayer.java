@@ -36,7 +36,6 @@ import java.nio.charset.StandardCharsets;
 })
 public abstract class AbstractServiceLayer {
 
-    private static final DataBufferFactory FACTORY = new DefaultDataBufferFactory();
 
     @Autowired
     protected PromotionService promotionService;
@@ -53,24 +52,4 @@ public abstract class AbstractServiceLayer {
     protected PromotionCardReactiveElasticsearchRepositoryImpl promotionRepository;
     @MockBean
     protected QueryCreator<Cloth, PublicSearchingObject> queryCreator;
-
-    static final String fileName = "image";
-
-    static class PartImpl implements Part {
-        @Override
-        public String name() {
-            return fileName;
-        }
-
-        @Override
-        public HttpHeaders headers() {
-            return HttpHeaders.EMPTY;
-        }
-
-        @Override
-        public Flux<DataBuffer> content() {
-            return DataBufferUtils.read(
-                    new ByteArrayResource(fileName.getBytes(StandardCharsets.UTF_8)), FACTORY, 1024);
-        }
-    }
 }

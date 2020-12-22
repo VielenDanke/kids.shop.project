@@ -2,8 +2,9 @@ package kz.danke.kids.shop.service;
 
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
+import kz.danke.kids.shop.util.PartImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.http.codec.multipart.Part;
@@ -11,11 +12,17 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.test.publisher.PublisherProbe;
 
 import java.util.Collections;
 import java.util.UUID;
 
 public class ClothServiceTest extends AbstractServiceLayer {
+
+    @BeforeEach
+    public void setup() {
+        Mockito.reset(super.clothRepository);
+    }
 
     @Test
     public void clothServiceTest_SaveCloth() {
@@ -35,12 +42,14 @@ public class ClothServiceTest extends AbstractServiceLayer {
     public void clothServiceTest_DeleteById() {
         String testId = UUID.randomUUID().toString();
 
-        Mockito.when(super.clothRepository.deleteById(testId)).then(Answers.RETURNS_DEFAULTS);
+        Mockito.when(super.clothRepository.existsById(testId)).thenReturn(Mono.just(true));
+        Mockito.when(super.clothRepository.deleteById(testId)).thenReturn(Mono.empty());
 
         StepVerifier.create(super.clothService.deleteById(testId))
                 .expectSubscription()
-                .expectComplete();
+                .verifyComplete();
 
+        Mockito.verify(super.clothRepository, Mockito.times(1)).existsById(testId);
         Mockito.verify(super.clothRepository, Mockito.times(1)).deleteById(testId);
     }
 
@@ -51,7 +60,7 @@ public class ClothServiceTest extends AbstractServiceLayer {
 
         Mockito.when(super.queryCreator.findAllTextSearching(searchingObject, Cloth.class))
                 .thenReturn(Flux.just(new SearchHit<>(
-                                fileName,
+                                cloth.getId(),
                                 1.0f,
                                 new Object[]{},
                                 Collections.emptyMap(),
@@ -75,7 +84,7 @@ public class ClothServiceTest extends AbstractServiceLayer {
 
         Mockito.when(super.queryCreator.findAllByIdIn(Cloth.class, testId))
                 .thenReturn(Flux.just(new SearchHit<>(
-                                fileName,
+                                testId,
                                 1.0f,
                                 new Object[]{},
                                 Collections.emptyMap(),
@@ -145,7 +154,7 @@ public class ClothServiceTest extends AbstractServiceLayer {
         Mockito.when(super.clothRepository.save(cloth)).thenReturn(Mono.just(cloth));
         Mockito.when(super.clothRepository.findById(testId)).thenReturn(Mono.just(cloth));
 
-        Part part = new PartImpl();
+        Part part = new PartImpl(testId);
 
         StepVerifier.create(super.clothService.addFilesToCloth(Collections.singletonList(part), testId))
                 .expectSubscription()

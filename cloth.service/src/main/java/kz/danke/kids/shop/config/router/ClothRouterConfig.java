@@ -10,6 +10,8 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import javax.validation.constraints.NotNull;
+
 @Configuration
 public class ClothRouterConfig {
 

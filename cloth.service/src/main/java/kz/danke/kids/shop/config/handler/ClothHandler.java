@@ -53,7 +53,7 @@ public class ClothHandler {
                         .name(cloth.getName())
                         .description(cloth.getDescription())
                         .build()
-                ).flatMap(clothSaveResponse -> ServerResponse.ok().body(Mono.just(clothSaveResponse), ClothSaveResponse.class))
+                ).flatMap(clothSaveResponse -> ServerResponse.status(HttpStatus.CREATED).body(Mono.just(clothSaveResponse), ClothSaveResponse.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class)
@@ -68,6 +68,10 @@ public class ClothHandler {
                 .flatMap(partList -> clothService.addFilesToCloth(partList, id))
                 .map(ClothDTO::toClothDTO)
                 .flatMap(clothDto -> ServerResponse.ok().body(Mono.just(clothDto), ClothDTO.class))
+                .onErrorResume(ClothNotFoundException.class, ex -> ServerResponse.status(HttpStatus.NOT_FOUND).body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                        ResponseFailed.class
+                ))
                 .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class
@@ -171,15 +175,28 @@ public class ClothHandler {
     }
 
     public Mono<ServerResponse> handleClothById(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
-                clothService.findById(serverRequest.pathVariable("id")), Cloth.class
-        ).onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
-                .status(HttpStatus.NOT_FOUND)
-                .body(
-                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path()),
-                        ResponseFailed.class
+        return Mono.justOrEmpty(serverRequest.pathVariable("id"))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyPathVariableException("Path variable ID is empty"))))
+                .flatMap(clothService::findById)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotFoundException("Cloth not found"))))
+                .flatMap(cloth -> ServerResponse.ok().body(Mono.just(cloth), Cloth.class))
+                .onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(
+                                Mono.just(
+                                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                                ),
+                                ResponseFailed.class
+                        )
                 )
-        );
+                .onErrorResume(Exception.class, ex -> ServerResponse
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(
+                                Mono.just(
+                                        new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
+                                ),
+                                ResponseFailed.class
+                        ));
     }
 
     public Mono<ServerResponse> deleteClothById(ServerRequest serverRequest) {
@@ -190,18 +207,19 @@ public class ClothHandler {
                 .onErrorResume(EmptyPathVariableException.class, ex -> ServerResponse.badRequest().body(Mono.just(
                         new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                 ), ResponseFailed.class))
-                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(Mono.just(
+                .onErrorResume(ClothNotFoundException.class, ex -> ServerResponse.status(HttpStatus.NOT_FOUND).body(Mono.just(
                         new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                 ), ResponseFailed.class));
     }
 
     public Mono<ServerResponse> handleClothCart(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+        return serverRequest.bodyToMono(new ParameterizedTypeReference<List<String>>() {
+        })
                 .map(list -> list.toArray(String[]::new))
                 .flatMapMany(clothService::findByIdIn)
                 .collectList()
                 .flatMap(list -> ServerResponse.ok().body(Mono.just(list), Cloth.class))
-                .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(Mono.just(
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Mono.just(
                         new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())
                 ), ResponseFailed.class));
     }

@@ -36,7 +36,21 @@ public class ClothServiceImpl implements ClothService {
 
     @Override
     public Mono<Void> deleteById(String id) {
-        return clothReactiveElasticsearchRepositoryImpl.deleteById(id);
+        return clothReactiveElasticsearchRepositoryImpl
+                .existsById(id)
+                .flatMap(bool -> {
+                    if (bool) {
+                        return clothReactiveElasticsearchRepositoryImpl.deleteById(id);
+                    } else {
+                        return Mono.defer(() -> Mono.error(
+                                new ClothNotFoundException(
+                                        String.format(
+                                                "Cloth with ID %s not found", id
+                                        )
+                                )
+                        ));
+                    }
+                });
     }
 
     @Override
@@ -66,15 +80,15 @@ public class ClothServiceImpl implements ClothService {
     @Override
     public Mono<Cloth> findById(String id) {
         return clothReactiveElasticsearchRepositoryImpl
-                .findById(id)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(
-                        new ClothNotFoundException(String.format("Cloth with ID %s not found", id))))
-                );
+                .findById(id);
     }
 
     @Override
     public Mono<Cloth> addFilesToCloth(List<Part> files, final String id) {
-        Mono<Cloth> clothById = clothReactiveElasticsearchRepositoryImpl.findById(id);
+        Mono<Cloth> clothById = clothReactiveElasticsearchRepositoryImpl.findById(id)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotFoundException(
+                        String.format("Cloth with ID %s not found", id)
+                ))));
 
         return Flux.fromIterable(files)
                 .map(part -> {
@@ -95,9 +109,6 @@ public class ClothServiceImpl implements ClothService {
                     cloth.getImages().addAll(images);
 
                     return clothReactiveElasticsearchRepositoryImpl.save(cloth);
-                })
-                .onErrorContinue(Exception.class, (ex, obj) -> {
-                    log.error("Exception during file saving occurred", ex);
                 });
 
 

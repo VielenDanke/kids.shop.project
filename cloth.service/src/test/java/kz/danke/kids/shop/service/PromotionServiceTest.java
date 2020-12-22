@@ -1,9 +1,9 @@
 package kz.danke.kids.shop.service;
 
 import kz.danke.kids.shop.document.PromotionCard;
+import kz.danke.kids.shop.util.PartImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.util.StringUtils;
@@ -14,6 +14,11 @@ import reactor.test.StepVerifier;
 import java.util.UUID;
 
 public class PromotionServiceTest extends AbstractServiceLayer {
+
+    @BeforeEach
+    public void setup() {
+        Mockito.reset(super.promotionRepository);
+    }
 
     @Test
     public void promotionServiceTest_SavePromotion() {
@@ -47,7 +52,7 @@ public class PromotionServiceTest extends AbstractServiceLayer {
     public void promotionServiceTest_DeleteByPromotionId() {
         String testId = UUID.randomUUID().toString();
 
-        Mockito.when(super.promotionRepository.deleteById(testId)).then(Answers.RETURNS_DEFAULTS);
+        Mockito.when(super.promotionRepository.deleteById(testId)).thenReturn(Mono.empty());
 
         StepVerifier.create(super.promotionService.deletePromotionCardById(testId))
                 .expectSubscription()
@@ -60,7 +65,7 @@ public class PromotionServiceTest extends AbstractServiceLayer {
     public void promotionServiceTest_SaveFileToPromotion() {
         PromotionCard promotionCard = PromotionCard.builder().id(UUID.randomUUID().toString()).build();
 
-        Part part = new PartImpl();
+        Part part = new PartImpl(promotionCard.getId());
 
         Mockito.when(super.promotionRepository.save(promotionCard)).thenReturn(Mono.just(promotionCard));
         Mockito.when(super.promotionRepository.findById(promotionCard.getId())).thenReturn(Mono.just(promotionCard));

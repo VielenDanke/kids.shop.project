@@ -1,8 +1,8 @@
 package kz.danke.kids.shop.service;
 
 import kz.danke.kids.shop.document.Category;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -12,6 +12,11 @@ import reactor.test.StepVerifier;
 import java.util.UUID;
 
 public class CategoryServiceTest extends AbstractServiceLayer {
+
+    @BeforeEach
+    public void setup() {
+        Mockito.reset(super.categoryRepository);
+    }
 
     @Test
     public void categoryServiceTest_SaveCategory() {
