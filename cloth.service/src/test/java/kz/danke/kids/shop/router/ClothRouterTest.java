@@ -1,12 +1,14 @@
 package kz.danke.kids.shop.router;
 
+import kz.danke.kids.shop.document.Cart;
 import kz.danke.kids.shop.document.Cloth;
+import kz.danke.kids.shop.document.ClothCart;
+import kz.danke.kids.shop.document.LineSize;
 import kz.danke.kids.shop.dto.ClothDTO;
 import kz.danke.kids.shop.dto.request.ClothSaveRequest;
 import kz.danke.kids.shop.exceptions.ClothNotFoundException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.searching.PublicSearchingObject;
-import kz.danke.kids.shop.util.PartImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.http.codec.multipart.Part;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -312,5 +313,75 @@ public class ClothRouterTest extends AbstractRouterLayer {
                 .expectStatus().isBadRequest();
 
         Mockito.verify(clothService, Mockito.times(0)).findAllTextSearching(Mockito.any());
+    }
+
+    @Test
+    public void clothHandler_HandleClothReserveCart() {
+        final String clothId = UUID.randomUUID().toString();
+        final String testHeight = "height";
+        final int testInt = 5;
+        final Cloth cloth = Cloth.builder()
+                .id(clothId)
+                .lineSizes(new ArrayList<>(
+                        Collections.singletonList(LineSize.builder().age(5).height(testHeight).amount(5).build()))
+                )
+                .build();
+        final List<ClothCart> clothCartList = new ArrayList<>() {{
+            add(new ClothCart(clothId, testInt, testHeight, testInt, testInt));
+        }};
+        final Cart cart = new Cart(clothCartList);
+
+        Mockito.when(clothService.findByIdIn(Mockito.anyString())).thenReturn(Flux.just(cloth));
+        Mockito.when(clothService.saveWithoutSetId(Mockito.any(Cloth.class))).thenReturn(Mono.just(cloth));
+
+        webTestClient
+                .post()
+                .uri("/clothes/reserve")
+                .body(Mono.just(cart), Cart.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Cart.class)
+                .value(responseCart -> {
+                    List<ClothCart> responseClothCartList = responseCart.getClothCartList();
+                    Assertions.assertTrue(responseClothCartList.stream().anyMatch(cc -> cc.getId().equals(clothId)));
+                });
+
+        Mockito.verify(clothService, Mockito.times(1)).findByIdIn(Mockito.anyString());
+        Mockito.verify(clothService, Mockito.times(1)).saveWithoutSetId(Mockito.any(Cloth.class));
+    }
+
+    @Test
+    public void clothHandler_HandleDeclineReserveCart() {
+        final String clothId = UUID.randomUUID().toString();
+        final String testHeight = "height";
+        final int testInt = 5;
+        final Cloth cloth = Cloth.builder()
+                .id(clothId)
+                .lineSizes(new ArrayList<>(
+                        Collections.singletonList(LineSize.builder().age(5).height(testHeight).amount(5).build()))
+                )
+                .build();
+        final List<ClothCart> clothCartList = new ArrayList<>() {{
+            add(new ClothCart(clothId, testInt, testHeight, testInt, testInt));
+        }};
+        final Cart cart = new Cart(clothCartList);
+
+        Mockito.when(clothService.findByIdIn(Mockito.anyString())).thenReturn(Flux.just(cloth));
+        Mockito.when(clothService.saveWithoutSetId(Mockito.any(Cloth.class))).thenReturn(Mono.just(cloth));
+
+        webTestClient
+                .post()
+                .uri("/clothes/reserve/decline")
+                .body(Mono.just(cart), Cart.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Cart.class)
+                .value(responseCart -> {
+                    List<ClothCart> responseClothCartList = responseCart.getClothCartList();
+                    Assertions.assertTrue(responseClothCartList.stream().anyMatch(cc -> cc.getId().equals(clothId)));
+                });
+
+        Mockito.verify(clothService, Mockito.times(1)).findByIdIn(Mockito.anyString());
+        Mockito.verify(clothService, Mockito.times(1)).saveWithoutSetId(Mockito.any(Cloth.class));
     }
 }

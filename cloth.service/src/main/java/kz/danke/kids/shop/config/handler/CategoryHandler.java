@@ -1,9 +1,11 @@
 package kz.danke.kids.shop.config.handler;
 
 import kz.danke.kids.shop.document.Category;
+import kz.danke.kids.shop.dto.request.CategorySaveRequest;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -36,9 +38,10 @@ public class CategoryHandler {
     }
 
     public Mono<ServerResponse> addCategory(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(Category.class)
+        return serverRequest.bodyToMono(CategorySaveRequest.class)
+                .map(categorySaveRequest -> Category.builder().category(categorySaveRequest.getCategoryName()).build())
                 .flatMap(categoryService::save)
-                .flatMap(category -> ServerResponse.ok().body(Mono.just(category), Category.class))
+                .flatMap(category -> ServerResponse.status(HttpStatus.CREATED).body(Mono.just(category), Category.class))
                 .onErrorResume(Exception.class, ex -> ServerResponse.status(500).body(
                         Mono.just(
                                 new ResponseFailed(

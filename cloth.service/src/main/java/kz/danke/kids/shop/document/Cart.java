@@ -1,7 +1,5 @@
 package kz.danke.kids.shop.document;
 
-import lombok.*;
-
 import java.util.ArrayList;
 import java.util.List;
 

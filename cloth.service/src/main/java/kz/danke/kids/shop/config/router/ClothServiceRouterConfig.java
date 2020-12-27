@@ -13,10 +13,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import javax.validation.constraints.NotNull;
 
 @Configuration
-public class ClothRouterConfig {
+public class ClothServiceRouterConfig {
 
     @Bean
-    public RouterFunction<ServerResponse> clothRouterFunction(
+    public RouterFunction<ServerResponse> clothServiceRouterFunctions(
             ClothHandler clothHandler, CategoryHandler categoryHandler, PromotionHandler promotionHandler
     ) {
         return RouterFunctions.route()
@@ -31,25 +31,16 @@ public class ClothRouterConfig {
                         .POST("/reserve", clothHandler::processDeclineOrReserve)
                         .POST("/reserve/decline", clothHandler::processDeclineOrReserve)
                 )
-                .build()
-                .andRoute(
-                        RequestPredicates.POST("/categories"),
-                        categoryHandler::addCategory
-                ).andRoute(
-                        RequestPredicates.GET("/categories"),
-                        categoryHandler::finAllCategories
-                ).andRoute(
-                        RequestPredicates.POST("/promotions"),
-                        promotionHandler::handleSavePromotion
-                ).andRoute(
-                        RequestPredicates.GET("/promotions"),
-                        promotionHandler::getAllPromotions
-                ).andRoute(
-                        RequestPredicates.POST("/promotions/{id}/file"),
-                        promotionHandler::handleSaveFileToPromotion
-                ).andRoute(
-                        RequestPredicates.DELETE("/promotions/{id}"),
-                        promotionHandler::handleDeletePromotion
-                );
+                .path("/categories", builder -> builder
+                        .GET("", categoryHandler::finAllCategories)
+                        .POST("", categoryHandler::addCategory)
+                )
+                .path("/promotions", builder -> builder
+                        .POST("", promotionHandler::handleSavePromotion)
+                        .GET("", promotionHandler::getAllPromotions)
+                        .POST("/{id}/file", promotionHandler::handleSaveFileToPromotion)
+                        .DELETE("/{id}", promotionHandler::handleDeletePromotion)
+                )
+                .build();
     }
 }

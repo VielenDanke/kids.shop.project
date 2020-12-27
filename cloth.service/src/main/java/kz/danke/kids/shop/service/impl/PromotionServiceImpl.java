@@ -1,6 +1,7 @@
 package kz.danke.kids.shop.service.impl;
 
 import kz.danke.kids.shop.document.PromotionCard;
+import kz.danke.kids.shop.exceptions.NotFoundException;
 import kz.danke.kids.shop.repository.PromotionCardReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.PromotionService;
 import org.slf4j.Logger;
@@ -47,7 +48,8 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public Mono<PromotionCard> saveFileToPromotionCard(Part part, String id) {
-        Mono<PromotionCard> promotionCardById = promotionRepository.findById(id);
+        Mono<PromotionCard> promotionCardById = promotionRepository.findById(id)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException("Promotion not found"))));
 
         return Mono.just(part)
                 .map(file -> {

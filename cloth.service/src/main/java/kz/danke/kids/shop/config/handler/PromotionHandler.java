@@ -3,9 +3,11 @@ package kz.danke.kids.shop.config.handler;
 import kz.danke.kids.shop.document.PromotionCard;
 import kz.danke.kids.shop.dto.request.PromotionCardSaveRequest;
 import kz.danke.kids.shop.exceptions.EmptyRequestException;
+import kz.danke.kids.shop.exceptions.NotFoundException;
 import kz.danke.kids.shop.exceptions.ResponseFailed;
 import kz.danke.kids.shop.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -41,13 +43,21 @@ public class PromotionHandler {
                         .build()
                 )
                 .flatMap(promotionService::save)
-                .flatMap(card -> ServerResponse.ok().body(Mono.just(card), PromotionCard.class));
+                .flatMap(card -> ServerResponse.status(HttpStatus.CREATED).body(Mono.just(card), PromotionCard.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                        ResponseFailed.class
+                ));
     }
 
     public Mono<ServerResponse> getAllPromotions(ServerRequest serverRequest) {
         return promotionService.findAll()
                 .collectList()
-                .flatMap(cardList -> ServerResponse.ok().body(Mono.just(cardList), PromotionCard.class));
+                .flatMap(cardList -> ServerResponse.ok().body(Mono.just(cardList), PromotionCard.class))
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                        ResponseFailed.class
+                ));
     }
 
     public Mono<ServerResponse> handleSaveFileToPromotion(ServerRequest serverRequest) {
@@ -57,7 +67,12 @@ public class PromotionHandler {
                 .map(stringPartMultiValueMap -> stringPartMultiValueMap.getFirst(imageKey))
                 .flatMap(part -> promotionService.saveFileToPromotionCard(part, id))
                 .flatMap(promCard -> ServerResponse.ok().body(Mono.just(promCard), PromotionCard.class))
-                .onErrorResume(Exception.class, ex -> ServerResponse.badRequest().body(
+                .onErrorResume(NotFoundException.class, ex -> ServerResponse.status(HttpStatus.NOT_FOUND).body(
+                        Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
+                        ResponseFailed.class
+                        )
+                )
+                .onErrorResume(Exception.class, ex -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                         Mono.just(new ResponseFailed(ex.getLocalizedMessage(), ex.toString(), serverRequest.path())),
                         ResponseFailed.class
                         )
