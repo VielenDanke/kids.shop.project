@@ -178,7 +178,6 @@ public class ClothHandler {
         return Mono.justOrEmpty(serverRequest.pathVariable("id"))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new EmptyPathVariableException("Path variable ID is empty"))))
                 .flatMap(clothService::findById)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClothNotFoundException("Cloth not found"))))
                 .flatMap(cloth -> ServerResponse.ok().body(Mono.just(cloth), Cloth.class))
                 .onErrorResume(ClothNotFoundException.class, ex -> ServerResponse
                         .status(HttpStatus.NOT_FOUND)

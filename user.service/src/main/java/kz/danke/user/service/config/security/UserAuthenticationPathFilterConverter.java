@@ -1,6 +1,5 @@
 package kz.danke.user.service.config.security;
 
-import io.jsonwebtoken.Claims;
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.service.JsonObjectMapper;

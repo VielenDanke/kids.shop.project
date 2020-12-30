@@ -1,6 +1,5 @@
 package kz.danke.kids.shop.router;
 
-import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.document.PromotionCard;
 import kz.danke.kids.shop.dto.request.PromotionCardSaveRequest;
 import kz.danke.kids.shop.exceptions.NotFoundException;

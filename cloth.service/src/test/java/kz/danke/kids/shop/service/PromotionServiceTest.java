@@ -1,6 +1,8 @@
 package kz.danke.kids.shop.service;
 
 import kz.danke.kids.shop.document.PromotionCard;
+import kz.danke.kids.shop.exceptions.ClothNotFoundException;
+import kz.danke.kids.shop.exceptions.NotFoundException;
 import kz.danke.kids.shop.util.PartImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.UUID;
+
+import static org.mockito.Mockito.*;
 
 public class PromotionServiceTest extends AbstractServiceLayer {
 
@@ -31,7 +35,7 @@ public class PromotionServiceTest extends AbstractServiceLayer {
                 .expectNextMatches(pc -> !StringUtils.isEmpty(pc.getId()))
                 .verifyComplete();
 
-        Mockito.verify(super.promotionRepository, Mockito.times(1)).save(promotionCard);
+        verify(super.promotionRepository, Mockito.times(1)).save(promotionCard);
     }
 
     @Test
@@ -45,20 +49,33 @@ public class PromotionServiceTest extends AbstractServiceLayer {
                 .expectNextCount(1)
                 .verifyComplete();
 
-        Mockito.verify(super.promotionRepository, Mockito.times(1)).findAll();
+        verify(super.promotionRepository, Mockito.times(1)).findAll();
     }
 
     @Test
     public void promotionServiceTest_DeleteByPromotionId() {
         String testId = UUID.randomUUID().toString();
 
+        Mockito.when(super.promotionRepository.existsById(testId)).thenReturn(Mono.just(true));
         Mockito.when(super.promotionRepository.deleteById(testId)).thenReturn(Mono.empty());
 
         StepVerifier.create(super.promotionService.deletePromotionCardById(testId))
                 .expectSubscription()
                 .verifyComplete();
 
-        Mockito.verify(super.promotionRepository, Mockito.times(1)).deleteById(testId);
+        verify(super.promotionRepository, Mockito.times(1)).deleteById(testId);
+    }
+
+    @Test
+    public void promotionServiceTest_DeletePromotionById_ReturnClothNotFoundException() {
+        Mockito.when(super.promotionRepository.existsById(anyString())).thenReturn(Mono.just(false));
+
+        StepVerifier.create(super.promotionService.deletePromotionCardById(anyString()))
+                .expectError(ClothNotFoundException.class)
+                .verify();
+
+        verify(super.promotionRepository, times(1)).existsById(anyString());
+        verify(super.promotionRepository, times(0)).deleteById(anyString());
     }
 
     @Test
@@ -67,15 +84,29 @@ public class PromotionServiceTest extends AbstractServiceLayer {
 
         Part part = new PartImpl(promotionCard.getId());
 
-        Mockito.when(super.promotionRepository.save(promotionCard)).thenReturn(Mono.just(promotionCard));
-        Mockito.when(super.promotionRepository.findById(promotionCard.getId())).thenReturn(Mono.just(promotionCard));
+        when(super.promotionRepository.save(promotionCard)).thenReturn(Mono.just(promotionCard));
+        when(super.promotionRepository.findById(promotionCard.getId())).thenReturn(Mono.just(promotionCard));
 
         StepVerifier.create(super.promotionService.saveFileToPromotionCard(part, promotionCard.getId()))
                 .expectSubscription()
                 .expectNextMatches(pm -> !StringUtils.isEmpty(pm.getImage()))
                 .verifyComplete();
 
-        Mockito.verify(super.promotionRepository, Mockito.times(1)).save(promotionCard);
-        Mockito.verify(super.promotionRepository, Mockito.times(1)).findById(promotionCard.getId());
+        verify(super.promotionRepository, Mockito.times(1)).save(promotionCard);
+        verify(super.promotionRepository, Mockito.times(1)).findById(promotionCard.getId());
+    }
+
+    @Test
+    public void promotionServiceTest_SaveFileToPromotion_ReturnClothNotFoundException() {
+        Part part = new PartImpl("test");
+
+        when(super.promotionRepository.findById(anyString())).thenReturn(Mono.empty());
+
+        StepVerifier.create(super.promotionService.saveFileToPromotionCard(part, anyString()))
+                .expectError(NotFoundException.class)
+                .verify();
+
+        verify(super.promotionRepository, times(1)).findById(anyString());
+        verify(super.promotionRepository, times(0)).save(any(PromotionCard.class));
     }
 }

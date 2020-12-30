@@ -3,10 +3,6 @@ package kz.danke.kids.shop.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import kz.danke.kids.shop.document.LineSize;
 import kz.danke.kids.shop.document.Material;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 

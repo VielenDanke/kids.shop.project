@@ -1,7 +1,5 @@
 package kz.danke.kids.shop.service.searching;
 
-import lombok.*;
-
 public class PublicSearchingObject {
 
     private String name;

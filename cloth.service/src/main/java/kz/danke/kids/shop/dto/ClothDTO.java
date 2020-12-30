@@ -2,12 +2,8 @@ package kz.danke.kids.shop.dto;
 
 import kz.danke.kids.shop.document.Cloth;
 import kz.danke.kids.shop.document.LineSize;
-import kz.danke.kids.shop.document.Material;
-import lombok.*;
 
-import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ClothDTO {
 

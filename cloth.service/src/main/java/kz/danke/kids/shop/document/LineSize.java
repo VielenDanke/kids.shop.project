@@ -1,7 +1,5 @@
 package kz.danke.kids.shop.document;
 
-import lombok.*;
-
 import java.util.Objects;
 
 public class LineSize {

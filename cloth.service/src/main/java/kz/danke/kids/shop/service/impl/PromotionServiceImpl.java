@@ -1,6 +1,7 @@
 package kz.danke.kids.shop.service.impl;
 
 import kz.danke.kids.shop.document.PromotionCard;
+import kz.danke.kids.shop.exceptions.ClothNotFoundException;
 import kz.danke.kids.shop.exceptions.NotFoundException;
 import kz.danke.kids.shop.repository.PromotionCardReactiveElasticsearchRepositoryImpl;
 import kz.danke.kids.shop.service.PromotionService;
@@ -43,7 +44,15 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public Mono<Void> deletePromotionCardById(String id) {
-        return promotionRepository.deleteById(id);
+        return promotionRepository.existsById(id)
+                .flatMap(bool -> {
+                    if (bool) {
+                        return promotionRepository.deleteById(id);
+                    } else {
+                        return Mono.defer(() -> Mono.error(
+                                new ClothNotFoundException(String.format("Cloth with ID %s not found", id))));
+                    }
+                });
     }
 
     @Override

@@ -14,7 +14,6 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import static kz.danke.user.service.config.state.machine.StateMachineConfig.CLOTH_CART_KEY;
 import static kz.danke.user.service.config.state.machine.actions.PurchaseAction.USER_DATA_KEY;

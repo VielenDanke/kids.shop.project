@@ -9,7 +9,6 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 

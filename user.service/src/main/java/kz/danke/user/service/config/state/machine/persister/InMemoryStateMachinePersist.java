@@ -1,6 +1,5 @@
 package kz.danke.user.service.config.state.machine.persister;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import kz.danke.user.service.config.state.machine.PurchaseEvent;
 import kz.danke.user.service.config.state.machine.PurchaseState;
 import org.springframework.statemachine.StateMachineContext;

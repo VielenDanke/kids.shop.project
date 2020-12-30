@@ -1,6 +1,5 @@
 package kz.danke.kids.shop.document;
 
-import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;

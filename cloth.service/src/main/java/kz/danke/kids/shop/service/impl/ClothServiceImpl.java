@@ -80,7 +80,9 @@ public class ClothServiceImpl implements ClothService {
     @Override
     public Mono<Cloth> findById(String id) {
         return clothReactiveElasticsearchRepositoryImpl
-                .findById(id);
+                .findById(id)
+                .switchIfEmpty(Mono.defer(() ->
+                        Mono.error(new ClothNotFoundException(String.format("Cloth with ID %s not found", id)))));
     }
 
     @Override

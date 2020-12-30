@@ -99,7 +99,8 @@ public class ClothRouterTest extends AbstractRouterLayer {
 
     @Test
     public void clothHandler_FindClothById_ReturnException() {
-        Mockito.when(clothService.findById(Mockito.anyString())).thenReturn(Mono.empty());
+        Mockito.when(clothService.findById(Mockito.anyString()))
+                .thenReturn(Mono.defer(() -> Mono.error(new ClothNotFoundException("test"))));
 
         webTestClient
                 .get()

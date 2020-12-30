@@ -1,6 +1,5 @@
 package kz.danke.kids.shop.exceptions;
 
-import lombok.*;
 import org.springframework.util.StringUtils;
 
 public class ResponseFailed {
