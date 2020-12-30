@@ -1,9 +1,6 @@
-cloth.kz.danke.user.service.service/target/**
 **/target
-
-cloth.kz.danke.user.service.service/.idea/
-
-cloth.kz.danke.user.service.service/*.iml
+**/.idea
+**/*.iml
 
 service_compose/rabbitmq/data/**
 service_compose/rabbitmq/logs/**
