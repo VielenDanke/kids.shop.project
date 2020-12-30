@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: kz.danke.kids.shop.router.CategoryRouterTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.585 s - in kz.danke.kids.shop.router.CategoryRouterTest
