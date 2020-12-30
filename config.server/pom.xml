@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.3.4.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/> <!-- lookup parent from kz.danke.user.service.repository -->
 	</parent>
 	<groupId>kz.danke</groupId>
 	<artifactId>config.server</artifactId>

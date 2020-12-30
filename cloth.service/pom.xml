@@ -6,12 +6,12 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.3.4.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/> <!-- lookup parent from kz.danke.user.service.repository -->
 	</parent>
 	<groupId>kz.danke</groupId>
-	<artifactId>cloth.service</artifactId>
+	<artifactId>cloth.kz.danke.user.service.service</artifactId>
 	<version>0.0.3-SNAPSHOT</version>
-	<name>cloth.service</name>
+	<name>cloth.kz.danke.user.service.service</name>
 	<description>Demo project for Elastic Reactive</description>
 
 	<properties>

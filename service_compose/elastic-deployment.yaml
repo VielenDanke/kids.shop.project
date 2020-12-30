@@ -31,7 +31,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: elastic-service
+  name: elastic-kz.danke.user.service.service
 spec:
   selector:
     app: elastic

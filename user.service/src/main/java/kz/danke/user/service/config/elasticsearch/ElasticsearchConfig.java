@@ -21,7 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 @Configuration
-@EnableReactiveElasticsearchRepositories(basePackages = {"kz.danke.user.service.repository"})
+@EnableReactiveElasticsearchRepositories(basePackages = {"kz.danke.user.kz.danke.user.service.service.kz.danke.user.service.repository"})
 public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfiguration {
 
     private final AppConfigProperties appConfigProperties;
