@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from kz.danke.user.service.repository -->
 	</parent>
 	<groupId>kz.danke</groupId>
-	<artifactId>cloth.kz.danke.user.service.service</artifactId>
+	<artifactId>cloth.service</artifactId>
 	<version>0.0.3-SNAPSHOT</version>
-	<name>cloth.kz.danke.user.service.service</name>
-	<description>Demo project for Elastic Reactive</description>
+	<name>cloth.service</name>
+	<description>Cloth service</description>
 
 	<properties>
 		<java.version>14</java.version>

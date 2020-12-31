@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from kz.danke.user.service.repository -->
 	</parent>
 	<groupId>kz.danke</groupId>
-	<artifactId>user.kz.danke.user.service.service</artifactId>
+	<artifactId>user.service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>user.kz.danke.user.service.service</name>
+	<name>user.service</name>
 	<description>User Service Cloth Shop</description>
 
 	<properties>

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from kz.danke.user.service.repository -->
     </parent>
     <groupId>kz.danke</groupId>
-    <artifactId>edge-kz.danke.user.service.service</artifactId>
+    <artifactId>edge-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Edge kz.danke.user.service.service</name>
-    <description>Edge kz.danke.user.service.service for Cloth shop</description>
+    <name>edge-service</name>
+    <description>Edge service for Cloth shop</description>
 
     <properties>
         <java.version>11</java.version>
