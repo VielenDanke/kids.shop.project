@@ -26,7 +26,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 })
 public abstract class AbstractServiceLayer {
 
-
     @Autowired
     protected PromotionService promotionService;
     @Autowired
