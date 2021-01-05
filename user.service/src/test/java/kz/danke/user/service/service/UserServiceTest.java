@@ -4,26 +4,20 @@ import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.UserUpdateRequest;
+import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.exception.UserNotFoundException;
-import okhttp3.mockwebserver.MockResponse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.util.StringUtils;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -33,16 +27,7 @@ public class UserServiceTest extends AbstractServiceLayer {
 
     @BeforeEach
     public void setup() {
-        Mockito.reset(passwordEncoder, userRepository);
-    }
-
-    @AfterAll
-    public static void teardown() {
-        try {
-            mockWebServer.shutdown();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Mockito.reset(passwordEncoder, userRepository, webRequestService);
     }
 
     @Test
@@ -175,14 +160,58 @@ public class UserServiceTest extends AbstractServiceLayer {
     }
 
     @Test
-    public void userService_ReserveCartShop() throws JsonProcessingException {
-        mockWebServer.url(String.format("http://localhost:%s/clothes/reserve", mockWebServer.getPort()));
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(new ObjectMapper().writeValueAsString(new Cart()))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+    public void userService_ReserveCartShop() {
+        Cart cart = new Cart();
+
+        when(webRequestService.reserveOrDeclineWebRequest(any(Cart.class), anyString()))
+                .thenReturn(Mono.just(cart));
+
+        StepVerifier.create(userService.reserveCartShop(cart))
+                .expectSubscription()
+                .expectNextCount(1)
+                .verifyComplete();
+
+        verify(webRequestService, times(1)).reserveOrDeclineWebRequest(any(Cart.class), anyString());
+    }
+
+    @Test
+    public void userService_ReserveCartShop_ReturnClothCartNotFoundException() {
+        when(webRequestService.reserveOrDeclineWebRequest(any(Cart.class), anyString()))
+                .thenReturn(Mono.defer(() -> Mono.error(new ClothCartNotFoundException("Cloth cart not found", 404))));
 
         StepVerifier.create(userService.reserveCartShop(new Cart()))
                 .expectSubscription()
+                .expectError(ClothCartNotFoundException.class)
+                .verify();
+
+        verify(webRequestService, times(1)).reserveOrDeclineWebRequest(any(Cart.class), anyString());
+    }
+
+    @Test
+    public void userService_DeclineCartShop() {
+        Cart cart = new Cart();
+
+        when(webRequestService.reserveOrDeclineWebRequest(any(Cart.class), anyString()))
+                .thenReturn(Mono.just(cart));
+
+        StepVerifier.create(userService.reserveDecline(cart))
+                .expectSubscription()
+                .expectNextCount(1)
                 .verifyComplete();
+
+        verify(webRequestService, times(1)).reserveOrDeclineWebRequest(any(Cart.class), anyString());
+    }
+
+    @Test
+    public void userService_DeclineCartShop_ReturnClothCartNotFoundException() {
+        when(webRequestService.reserveOrDeclineWebRequest(any(Cart.class), anyString()))
+                .thenReturn(Mono.defer(() -> Mono.error(new ClothCartNotFoundException("Cloth cart not found", 404))));
+
+        StepVerifier.create(userService.reserveDecline(new Cart()))
+                .expectSubscription()
+                .expectError(ClothCartNotFoundException.class)
+                .verify();
+
+        verify(webRequestService, times(1)).reserveOrDeclineWebRequest(any(Cart.class), anyString());
     }
 }

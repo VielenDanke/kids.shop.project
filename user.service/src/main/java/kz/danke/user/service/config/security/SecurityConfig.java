@@ -67,24 +67,19 @@ public class SecurityConfig {
         String[] getMatchers = new String[]{
                 "/cabinet"
         };
-
         String[] postMatchers = new String[]{
                 "/cabinet/update"
         };
-
         String[] deleteMatchers = new String[]{
 
         };
-
         AuthFilter authFilter = new AuthFilter(reactiveAuthenticationManager);
-
         UserAuthenticationPathFilterConverter authenticationConverter = new UserAuthenticationPathFilterConverter(jwtService, jsonObjectMapper);
 
         authenticationConverter.setAccessTokenKey(accessTokenKey);
         authenticationConverter.setUserClaimsKey(userClaimsKey);
 
         authFilter.setAuthenticationConverter(authenticationConverter);
-
         authFilter.setServerWebExchangeMatherWithPathMatchers(getMatchers, postMatchers, deleteMatchers);
 
         return authFilter;

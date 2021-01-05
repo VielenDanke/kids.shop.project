@@ -1,26 +1,23 @@
 package kz.danke.user.service.service.impl;
 
-import kz.danke.user.service.config.AppConfigProperties;
 import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
 import kz.danke.user.service.dto.request.ChargeRequest;
 import kz.danke.user.service.dto.request.UserUpdateRequest;
 import kz.danke.user.service.dto.response.ChargeResponse;
-import kz.danke.user.service.exception.ClothCartNotFoundException;
 import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.exception.UserNotFoundException;
 import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.UserService;
+import kz.danke.user.service.service.WebRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -29,20 +26,20 @@ import java.util.UUID;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final WebClient webClient;
     private final ReactiveUserRepository reactiveUserRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AppConfigProperties properties;
+    private final WebRequestService webRequestService;
+    private final Environment environment;
 
     @Autowired
-    public UserServiceImpl(WebClient webClient,
-                           ReactiveUserRepository reactiveUserRepository,
+    public UserServiceImpl(ReactiveUserRepository reactiveUserRepository,
                            PasswordEncoder passwordEncoder,
-                           AppConfigProperties properties) {
-        this.webClient = webClient;
+                           WebRequestService webRequestService,
+                           Environment environment) {
         this.reactiveUserRepository = reactiveUserRepository;
         this.passwordEncoder = passwordEncoder;
-        this.properties = properties;
+        this.webRequestService = webRequestService;
+        this.environment = environment;
     }
 
     @Override
@@ -77,39 +74,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Cart> reserveCartShop(Cart cart) {
-        return this.reserveOrDeclineWebRequest(cart, properties.getUrl().getReserveCart());
-    }
-
-    @Override
-    public Mono<ChargeResponse> processCartShop(ChargeRequest chargeRequest) {
-        return getPrincipalFromSecurityContext()
-                .then(Mono.just(new ChargeResponse("Transaction complete successfully")));
-
+        return webRequestService.reserveOrDeclineWebRequest(cart, environment.getProperty("app.url.reserve_cart"));
     }
 
     @Override
     public Mono<Cart> reserveDecline(Cart cart) {
-        return this.reserveOrDeclineWebRequest(cart, properties.getUrl().getDeclineCart());
-    }
-
-    private Mono<Cart> reserveOrDeclineWebRequest(Cart cart, String url) {
-        return webClient
-                .post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(Mono.just(cart), Cart.class)
-                .exchange()
-                .flatMap(clientResponse -> {
-                    HttpStatus httpStatus = clientResponse.statusCode();
-
-                    if (!httpStatus.equals(HttpStatus.OK)) {
-                        return Mono.defer(() -> Mono.error(new ClothCartNotFoundException(
-                                "Cloth in cart not found", clientResponse.rawStatusCode()))
-                        );
-                    }
-                    return clientResponse.bodyToMono(Cart.class);
-                });
+        return webRequestService.reserveOrDeclineWebRequest(cart, environment.getProperty("app.url.decline_cart"));
     }
 
     private Mono<User> getPrincipalFromSecurityContext() {

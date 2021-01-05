@@ -1,14 +1,13 @@
-package kz.danke.kids.shop.router;
+package kz.danke.user.service.router;
 
-import kz.danke.kids.shop.config.handler.CategoryHandler;
-import kz.danke.kids.shop.config.handler.ClothHandler;
-import kz.danke.kids.shop.config.handler.PromotionHandler;
-import kz.danke.kids.shop.config.router.ClothServiceRouterConfig;
-import kz.danke.kids.shop.service.CategoryService;
-import kz.danke.kids.shop.service.ClothService;
-import kz.danke.kids.shop.service.PromotionService;
-import org.junit.jupiter.api.TestInstance;
+import kz.danke.user.service.config.UserHandler;
+import kz.danke.user.service.config.UserRoutesConfig;
+import kz.danke.user.service.config.security.jwt.JwtService;
+import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.user.service.service.StateMachineProcessingService;
+import kz.danke.user.service.service.UserService;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
@@ -21,10 +20,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-        ClothHandler.class,
-        CategoryHandler.class,
-        PromotionHandler.class,
-        ClothServiceRouterConfig.class
+        UserRoutesConfig.class,
+        UserHandler.class
 })
 @TestPropertySource("classpath:application-test.properties")
 @WebFluxTest
@@ -32,13 +29,14 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         MockitoTestExecutionListener.class,
         DirtiesContextTestExecutionListener.class
 })
-@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public abstract class AbstractRouterLayer {
-    @MockBean
-    protected ClothService clothService;
-    @MockBean
-    protected CategoryService categoryService;
-    @MockBean
-    protected PromotionService promotionService;
     protected WebTestClient webTestClient;
+    @MockBean
+    protected UserService userService;
+    @MockBean
+    protected JsonObjectMapper jsonObjectMapper;
+    @MockBean
+    protected StateMachineProcessingService stateMachineProcessingService;
+    @MockBean
+    protected JwtService<String> jwtService;
 }

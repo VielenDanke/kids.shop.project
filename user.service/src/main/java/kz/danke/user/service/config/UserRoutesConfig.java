@@ -13,32 +13,16 @@ public class UserRoutesConfig {
     @Bean
     public RouterFunction<ServerResponse> userRoutes(UserHandler userHandler) {
         return RouterFunctions
-                .route(
-                        RequestPredicates.POST("/cart/reserve"),
-                        userHandler::handleCartProcess
-                )
-                .andRoute(
-                        RequestPredicates.POST("/cart/reserve/decline"),
-                        userHandler::handleCartReserveDecline
-                )
-                .andRoute(
-                        RequestPredicates.POST("/cart/retrieve"),
-                        userHandler::handleCartRetrieve
-                )
-                .andRoute(
-                        RequestPredicates.POST("/cart/process"),
-                        userHandler::handleChargeProcess
-                )
-                .andRoute(
-                        RequestPredicates.GET("/cabinet"),
-                        userHandler::getUserCabinet
-                )
-                .andRoute(
-                        RequestPredicates.POST("/auth/registration"),
-                        userHandler::saveNewUser
-                ).andRoute(
-                        RequestPredicates.POST("/cabinet/update"),
-                        userHandler::updateUser
-                );
+                .route().path("/cart", builder -> builder
+                        .POST("/reserve", userHandler::handleCartProcess)
+                        .POST("/reserve/decline", userHandler::handleCartReserveDecline)
+                        .POST("/retrieve", userHandler::handleCartRetrieve)
+                        .POST("/process", userHandler::handleChargeProcess))
+                .path("/cabinet", builder -> builder
+                        .GET("", userHandler::getUserCabinet)
+                        .POST("/update", userHandler::updateUser))
+                .path("/auth", builder -> builder
+                        .POST("/registration", userHandler::saveNewUser))
+                .build();
     }
 }
