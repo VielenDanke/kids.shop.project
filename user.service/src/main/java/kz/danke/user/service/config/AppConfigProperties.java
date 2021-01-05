@@ -7,6 +7,28 @@ public class AppConfigProperties {
 
     private Elasticsearch elasticsearch = new Elasticsearch();
     private Jwt jwt = new Jwt();
+    private Url url = new Url();
+
+    public static class Url {
+        private String reserveCart;
+        private String declineCart;
+
+        public String getReserveCart() {
+            return reserveCart;
+        }
+
+        public void setReserveCart(String reserveCart) {
+            this.reserveCart = reserveCart;
+        }
+
+        public String getDeclineCart() {
+            return declineCart;
+        }
+
+        public void setDeclineCart(String declineCart) {
+            this.declineCart = declineCart;
+        }
+    }
 
     public static class Jwt {
         private String secret;
@@ -75,6 +97,14 @@ public class AppConfigProperties {
         public void setHostAndPort(String hostAndPort) {
             this.hostAndPort = hostAndPort;
         }
+    }
+
+    public Url getUrl() {
+        return url;
+    }
+
+    public void setUrl(Url url) {
+        this.url = url;
     }
 
     public Jwt getJwt() {

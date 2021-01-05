@@ -1,5 +1,6 @@
 package kz.danke.user.service.service.impl;
 
+import kz.danke.user.service.config.AppConfigProperties;
 import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
@@ -31,14 +32,17 @@ public class UserServiceImpl implements UserService {
     private final WebClient webClient;
     private final ReactiveUserRepository reactiveUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AppConfigProperties properties;
 
     @Autowired
     public UserServiceImpl(WebClient webClient,
                            ReactiveUserRepository reactiveUserRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           AppConfigProperties properties) {
         this.webClient = webClient;
         this.reactiveUserRepository = reactiveUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.properties = properties;
     }
 
     @Override
@@ -73,8 +77,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Cart> reserveCartShop(Cart cart) {
-        final String clothServiceUrl = "http://cloth-ms/clothes/reserve";
-        return this.reserveOrDeclineWebRequest(cart, clothServiceUrl);
+        return this.reserveOrDeclineWebRequest(cart, properties.getUrl().getReserveCart());
     }
 
     @Override
@@ -86,8 +89,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Cart> reserveDecline(Cart cart) {
-        final String clothServiceUrl = "http://cloth-ms/clothes/reserve/decline";
-        return this.reserveOrDeclineWebRequest(cart, clothServiceUrl);
+        return this.reserveOrDeclineWebRequest(cart, properties.getUrl().getDeclineCart());
     }
 
     private Mono<Cart> reserveOrDeclineWebRequest(Cart cart, String url) {
