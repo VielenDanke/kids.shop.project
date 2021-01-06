@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq-development
+  name: rabbitmq-deployment
   labels:
     app: rabbitmq
 spec:
@@ -18,9 +18,12 @@ spec:
       - name: rabbitmq
         image: rabbitmq:3-management
         resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
           limits:
-            memory: "256Mi"
-            cpu: "512m"
+            cpu: 1000m
+            memory: 2Gi
         ports:
         - containerPort: 5672
         - containerPort: 15672
@@ -28,17 +31,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq-kz.danke.user.service.service
+  name: rabbitmq-service
 spec:
   selector:
     app: rabbitmq
   type: LoadBalancer
   ports:
   - name: "rabbit"
+    protocol: TCP
     port: 5672
     targetPort: 5672
-    nodePort: 30672
   - name: "management"
+    protocol: TCP
     port: 15672
     targetPort: 15672
-    nodePort: 30673

@@ -18,9 +18,11 @@ spec:
       - name: elastic
         image: elasticsearch:7.6.2
         resources:
+          requests:
+            memory: 4Gi
+            cpu: 8
           limits:
-            memory: "1024Mi"
-            cpu: "1024m"
+            memory: 4Gi
         ports:
           - containerPort: 9200
           - containerPort: 9300
@@ -31,17 +33,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: elastic-kz.danke.user.service.service
+  name: elastic-service
 spec:
   selector:
     app: elastic
   type: LoadBalancer  
   ports:
   - name: "elastic-first"
+    protocol: TCP
     port: 9200
     targetPort: 9200
-    nodePort: 30920
   - name: "elastic-second"
+    protocol: TCP
     port: 9300
     targetPort: 9300
-    nodePort: 30930

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
@@ -30,6 +31,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         DirtiesContextTestExecutionListener.class
 })
 public abstract class AbstractRouterLayer {
+    protected String testData = "test";
     protected WebTestClient webTestClient;
     @MockBean
     protected UserService userService;
