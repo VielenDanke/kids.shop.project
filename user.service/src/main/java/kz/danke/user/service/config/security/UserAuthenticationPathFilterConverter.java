@@ -2,6 +2,7 @@ package kz.danke.user.service.config.security;
 
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.document.User;
+import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,6 +35,7 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
                 .switchIfEmpty(Mono.empty())
                 .map(headers -> headers.getFirst(accessTokenKey))
                 .filter(jwtService::validateToken)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotAuthorizedException("Token is not valid"))))
                 .map(jwtService::extractTokenClaims)
                 .map(claims -> claims.get(userClaimsKey, String.class))
                 .map(userClaims -> jsonObjectMapper.deserializeJson(userClaims, User.class))
