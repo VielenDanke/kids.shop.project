@@ -49,4 +49,6 @@ public abstract class AbstractRouterLayer {
     protected StateMachineProcessingService stateMachineProcessingService;
     @Autowired
     protected JwtService<String> jwtService;
+    @Autowired
+    protected AppConfigProperties properties;
 }

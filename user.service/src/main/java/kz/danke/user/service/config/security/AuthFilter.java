@@ -1,5 +1,7 @@
 package kz.danke.user.service.config.security;
 
+import io.jsonwebtoken.JwtException;
+import kz.danke.user.service.exception.UserNotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -45,6 +47,12 @@ public class AuthFilter implements WebFilter {
                 .flatMap(authentication -> this.authenticate(serverWebExchange, webFilterChain, authentication))
                 .onErrorResume(AuthenticationException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
                         new WebFilterExchange(serverWebExchange, webFilterChain), e
+                ))
+                .onErrorResume(JwtException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                        new WebFilterExchange(serverWebExchange, webFilterChain), new AuthenticationException(e.getLocalizedMessage(), e) {}
+                ))
+                .onErrorResume(UserNotAuthorizedException.class, (e) -> this.authenticationFailureHandler.onAuthenticationFailure(
+                        new WebFilterExchange(serverWebExchange, webFilterChain), new AuthenticationException(e.getLocalizedMessage(), e) {}
                 ));
     }
 

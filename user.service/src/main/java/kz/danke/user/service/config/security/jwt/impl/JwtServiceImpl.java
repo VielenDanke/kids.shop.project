@@ -6,10 +6,12 @@ import io.jsonwebtoken.security.Keys;
 import kz.danke.user.service.config.AppConfigProperties;
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.document.User;
+import kz.danke.user.service.exception.UserNotAuthorizedException;
 import kz.danke.user.service.service.JsonObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.Base64;
 import java.util.Date;
@@ -49,10 +51,12 @@ public class JwtServiceImpl implements JwtService<String> {
     }
 
     @Override
-    public boolean validateToken(String token) {
-        return extractTokenClaims(token)
+    public Mono<String> validateToken(String token) {
+        return Mono.justOrEmpty(token)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UserNotAuthorizedException("Empty token"))))
+                .filter(t -> extractTokenClaims(t)
                 .getExpiration()
-                .after(new Date());
+                .after(new Date()));
     }
 
     @Override
