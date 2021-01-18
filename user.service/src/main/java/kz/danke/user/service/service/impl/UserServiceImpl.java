@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<User> updateUser(UserUpdateRequest request) {
-        return this.getPrincipalFromSecurityContext()
+        return this.getUserInSession()
                 .doOnNext(user -> {
                     user.setAddress(request.getAddress());
                     user.setPhoneNumber(request.getPhoneNumber());

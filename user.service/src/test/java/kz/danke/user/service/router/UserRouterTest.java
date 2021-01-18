@@ -2,6 +2,7 @@ package kz.danke.user.service.router;
 
 import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.User;
+import kz.danke.user.service.dto.request.UserUpdateRequest;
 import kz.danke.user.service.dto.response.UserCabinetResponse;
 import kz.danke.user.service.util.TestUtil;
 import org.junit.jupiter.api.Assertions;
@@ -26,6 +27,76 @@ public class UserRouterTest extends AbstractRouterLayer {
     public void setup(ApplicationContext applicationContext) {
         Mockito.reset(userService, stateMachineProcessingService);
         webTestClient = WebTestClient.bindToApplicationContext(applicationContext).build();
+    }
+
+    @Test
+    public void userRouter_UpdateUser() {
+        String id = UUID.randomUUID().toString();
+        UserUpdateRequest userUpdateRequest = new UserUpdateRequest();
+        User user = User.builder()
+                .id(id)
+                .username(testData)
+                .firstName(testData)
+                .lastName(testData)
+                .phoneNumber(testData)
+                .address(testData)
+                .city(testData)
+                .authorities(Collections.singleton(Authorities.ROLE_USER.name()))
+                .build();
+        String token = jwtService.generateToken(user);
+
+        when(userService.updateUser(any(UserUpdateRequest.class))).thenReturn(Mono.just(user));
+
+        webTestClient
+                .post()
+                .uri("/cabinet/update")
+                .header("accessToken", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(userUpdateRequest), UserUpdateRequest.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().exists("accessToken")
+                .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS)
+                .expectBody(UserCabinetResponse.class)
+                .value(userCabinetResponse -> {
+                    Assertions.assertEquals(testData, userCabinetResponse.getUsername());
+                    Assertions.assertEquals(testData, userCabinetResponse.getFirstName());
+                    Assertions.assertEquals(testData, userCabinetResponse.getLastName());
+                    Assertions.assertEquals(testData, userCabinetResponse.getPhoneNumber());
+                    Assertions.assertEquals(testData, userCabinetResponse.getAddress());
+                    Assertions.assertEquals(testData, userCabinetResponse.getCity());
+                });
+
+        verify(userService, times(1)).updateUser(any(UserUpdateRequest.class));
+    }
+
+    @Test
+    public void userRouter_UpdateUser_ReturnsNotAuthorizedException() throws JsonProcessingException {
+        UserUpdateRequest request = new UserUpdateRequest();
+        String token = TestUtil.generateToken(User.builder().build(), null, properties.getJwt().getSecret());
+
+        webTestClient
+                .post()
+                .uri("/cabinet/update")
+                .header("accessToken", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(request), UserUpdateRequest.class)
+                .exchange()
+                .expectStatus().is3xxRedirection();
+
+        verify(userService, times(0)).updateUser(any(UserUpdateRequest.class));
+    }
+
+    @Test
+    public void userRouter_UpdateUser_ReturnsNotAuthorizedException_EmptyHeader() {
+        webTestClient
+                .post()
+                .uri("/cabinet/update")
+                .body(Mono.just(new UserUpdateRequest()), UserUpdateRequest.class)
+                .exchange()
+                .expectStatus().is3xxRedirection();
+
+        verify(userService, times(0)).updateUser(any(UserUpdateRequest.class));
     }
 
     @Test
