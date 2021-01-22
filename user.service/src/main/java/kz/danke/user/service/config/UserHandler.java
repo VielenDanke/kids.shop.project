@@ -68,7 +68,7 @@ public class UserHandler {
 
         return Mono.justOrEmpty(stateMachineID)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new HeaderNotFoundException("STATE_ID header not found"))))
-                .map(stateMachineProcessingService::restoreCartFromStateMachine)
+                .map(stateMachineProcessingService::retrieveCartFromStateMachine)
                 .flatMap(cart -> ServerResponse.ok().body(Mono.just(cart), Cart.class))
                 .onErrorResume(HeaderNotFoundException.class, ex -> createServerResponse(ex, 400, serverRequest));
     }

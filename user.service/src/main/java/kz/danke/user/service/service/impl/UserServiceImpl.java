@@ -1,5 +1,6 @@
 package kz.danke.user.service.service.impl;
 
+import kz.danke.user.service.config.security.UserDetailsImpl;
 import kz.danke.user.service.document.Authorities;
 import kz.danke.user.service.document.Cart;
 import kz.danke.user.service.document.User;
@@ -16,6 +17,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsPasswordService;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -24,7 +28,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
 
     private final ReactiveUserRepository reactiveUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,6 +44,20 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.webRequestService = webRequestService;
         this.environment = environment;
+    }
+
+    @Override
+    public Mono<UserDetails> findByUsername(String username) {
+        return reactiveUserRepository.findByUsername(username)
+                .map(UserDetailsImpl::new);
+    }
+
+    @Override
+    public Mono<UserDetails> updatePassword(UserDetails userDetails, String newPassword) {
+        return reactiveUserRepository.findByUsername(userDetails.getUsername())
+                .doOnSuccess(user -> user.setPassword(newPassword))
+                .flatMap(reactiveUserRepository::save)
+                .map(UserDetailsImpl::new);
     }
 
     @Override

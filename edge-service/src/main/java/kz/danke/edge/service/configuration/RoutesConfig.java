@@ -1,5 +1,6 @@
 package kz.danke.edge.service.configuration;
 
+import kz.danke.edge.service.configuration.security.filter.AuthorizationHeaderFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -13,7 +14,8 @@ public class RoutesConfig {
 
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder,
-                                      @Qualifier("globalRetry") RetryGatewayFilterFactory.RetryConfig globalRetryConfig) {
+                                      @Qualifier("globalRetry") RetryGatewayFilterFactory.RetryConfig globalRetryConfig,
+                                      AuthorizationHeaderFilter authorizationHeaderFilter) {
         return builder
                 .routes()
                 .route(
@@ -23,7 +25,9 @@ public class RoutesConfig {
                                 .and()
                                 .path("/clothes")
                                 .filters(gatewayFilterSpec ->
-                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                        gatewayFilterSpec
+                                                .retry(retryConfig -> retryConfig = globalRetryConfig)
+                                )
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -51,6 +55,11 @@ public class RoutesConfig {
                                         retryConfig = globalRetryConfig;
                                         retryConfig.setMethods(HttpMethod.POST);
                                     });
+                                    gatewayFilterSpec.filter(
+                                            authorizationHeaderFilter.apply(
+                                                    new AuthorizationHeaderFilter.Config()
+                                            )
+                                    );
                                     return gatewayFilterSpec;
                                 })
                                 .uri("lb://cloth-ms")
@@ -68,7 +77,9 @@ public class RoutesConfig {
                                         ).retry(retryConfig -> {
                                             retryConfig = globalRetryConfig;
                                             retryConfig.setMethods(HttpMethod.POST);
-                                        })
+                                        }).filter(authorizationHeaderFilter.apply(
+                                                new AuthorizationHeaderFilter.Config()
+                                        ))
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -115,7 +126,7 @@ public class RoutesConfig {
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
                                     retryConfig = globalRetryConfig;
                                     retryConfig.setMethods(HttpMethod.POST);
-                                }))
+                                }).filter(authorizationHeaderFilter.apply(new AuthorizationHeaderFilter.Config())))
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -137,7 +148,7 @@ public class RoutesConfig {
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
                                     retryConfig = globalRetryConfig;
                                     retryConfig.setMethods(HttpMethod.POST);
-                                }))
+                                }).filter(authorizationHeaderFilter.apply(new AuthorizationHeaderFilter.Config())))
                                 .uri("lb://cloth-ms")
                 )
                 .route(
@@ -153,7 +164,7 @@ public class RoutesConfig {
                                         ).retry(retryConfig -> {
                                             retryConfig = globalRetryConfig;
                                             retryConfig.setMethods(HttpMethod.POST);
-                                        })
+                                        }).filter(authorizationHeaderFilter.apply(new AuthorizationHeaderFilter.Config()))
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -170,7 +181,11 @@ public class RoutesConfig {
                                         ).retry(retryConfig -> {
                                             retryConfig = globalRetryConfig;
                                             retryConfig.setMethods(HttpMethod.DELETE);
-                                        })
+                                        }).filter(
+                                                authorizationHeaderFilter.apply(
+                                                        new AuthorizationHeaderFilter.Config()
+                                                )
+                                        )
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -187,7 +202,11 @@ public class RoutesConfig {
                                         ).retry(retryConfig -> {
                                             retryConfig = globalRetryConfig;
                                             retryConfig.setMethods(HttpMethod.DELETE);
-                                        })
+                                        }).filter(
+                                                authorizationHeaderFilter.apply(
+                                                        new AuthorizationHeaderFilter.Config()
+                                                )
+                                        )
                                 )
                                 .uri("lb://cloth-ms")
                 )
@@ -246,7 +265,8 @@ public class RoutesConfig {
                                 .and()
                                 .path("/cabinet")
                                 .filters(gatewayFilterSpec ->
-                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig))
+                                        gatewayFilterSpec.retry(retryConfig -> retryConfig = globalRetryConfig)
+                                .filter(authorizationHeaderFilter.apply(new AuthorizationHeaderFilter.Config())))
                                 .uri("lb://user-ms")
                 )
                 .route(
@@ -262,6 +282,18 @@ public class RoutesConfig {
                                 .uri("lb://user-ms")
                 )
                 .route(
+                        "login-user",
+                        loginUser -> loginUser
+                        .method(HttpMethod.POST)
+                        .and()
+                        .path("/auth/login")
+                        .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
+                            retryConfig = globalRetryConfig;
+                            retryConfig.setMethods(HttpMethod.POST);
+                        }))
+                        .uri("lb://user-ms")
+                )
+                .route(
                         "update-user",
                         updateUser -> updateUser
                                 .method(HttpMethod.POST)
@@ -270,7 +302,7 @@ public class RoutesConfig {
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.retry(retryConfig -> {
                                     retryConfig = globalRetryConfig;
                                     retryConfig.setMethods(HttpMethod.POST);
-                                }))
+                                }).filter(authorizationHeaderFilter.apply(new AuthorizationHeaderFilter.Config())))
                                 .uri("lb://user-ms")
                 )
                 .build();

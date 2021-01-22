@@ -24,11 +24,11 @@ public class ClothCart {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ClothCart clothCart = (ClothCart) o;
-        return Objects.equals(id, clothCart.id);
+        return Objects.equals(id, clothCart.id) && Objects.equals(age, clothCart.age) && Objects.equals(height, clothCart.height);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, age, height);
     }
 }

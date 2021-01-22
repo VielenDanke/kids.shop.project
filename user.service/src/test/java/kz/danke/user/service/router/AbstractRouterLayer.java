@@ -6,6 +6,7 @@ import kz.danke.user.service.config.UserRoutesConfig;
 import kz.danke.user.service.config.security.SecurityConfig;
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.config.security.jwt.impl.JwtServiceImpl;
+import kz.danke.user.service.config.state.machine.StateMachineConfig;
 import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.StateMachineProcessingService;
 import kz.danke.user.service.service.UserService;
@@ -41,14 +42,15 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         SpringBootDependencyInjectionTestExecutionListener.class
 })
 public abstract class AbstractRouterLayer {
-    protected String testData = "test";
+    protected final String testData = "test";
+    protected final Integer testNumber = 8;
     protected WebTestClient webTestClient;
-    @MockBean
-    protected UserService userService;
-    @MockBean
-    protected StateMachineProcessingService stateMachineProcessingService;
     @Autowired
     protected JwtService<String> jwtService;
     @Autowired
     protected AppConfigProperties properties;
+    @MockBean
+    protected UserService userService;
+    @MockBean
+    protected StateMachineProcessingService stateMachineProcessingService;
 }

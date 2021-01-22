@@ -7,7 +7,7 @@ public interface StateMachineProcessingService {
 
     void processReserve(Cart cart, String stateMachineID);
 
-    Cart restoreCartFromStateMachine(String stateMachineID);
+    Cart retrieveCartFromStateMachine(String stateMachineID);
 
     void processChargeEvent(ChargeRequest chargeRequest, String stateMachineID);
 

@@ -1,13 +1,16 @@
 package kz.danke.user.service.config;
 
+import kz.danke.user.service.config.elasticsearch.ElasticsearchCreationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.List;
 
 @ConfigurationProperties(prefix = "app")
 public class AppConfigProperties {
 
+    private Url url = new Url();
     private Elasticsearch elasticsearch = new Elasticsearch();
     private Jwt jwt = new Jwt();
-    private Url url = new Url();
 
     public static class Url {
         private String reserveCart;
@@ -55,8 +58,19 @@ public class AppConfigProperties {
         private String hostAndPort;
         private String username;
         private String password;
+        private List<String> classList;
+        private ElasticsearchCreationPolicy creationPolicy = ElasticsearchCreationPolicy.NONE;
+        private String basePackage;
         private String jksStorePath;
         private String jksPassword;
+
+        public String getBasePackage() {
+            return basePackage;
+        }
+
+        public void setBasePackage(String basePackage) {
+            this.basePackage = basePackage;
+        }
 
         public String getJksStorePath() {
             return jksStorePath;
@@ -72,6 +86,22 @@ public class AppConfigProperties {
 
         public void setJksPassword(String jksPassword) {
             this.jksPassword = jksPassword;
+        }
+
+        public ElasticsearchCreationPolicy getCreationPolicy() {
+            return creationPolicy;
+        }
+
+        public void setCreationPolicy(ElasticsearchCreationPolicy creationPolicy) {
+            this.creationPolicy = creationPolicy;
+        }
+
+        public List<String> getClassList() {
+            return classList;
+        }
+
+        public void setClassList(List<String> classList) {
+            this.classList = classList;
         }
 
         public String getUsername() {
@@ -99,14 +129,6 @@ public class AppConfigProperties {
         }
     }
 
-    public Url getUrl() {
-        return url;
-    }
-
-    public void setUrl(Url url) {
-        this.url = url;
-    }
-
     public Jwt getJwt() {
         return jwt;
     }
@@ -121,5 +143,13 @@ public class AppConfigProperties {
 
     public void setElasticsearch(Elasticsearch elasticsearch) {
         this.elasticsearch = elasticsearch;
+    }
+
+    public Url getUrl() {
+        return url;
+    }
+
+    public void setUrl(Url url) {
+        this.url = url;
     }
 }

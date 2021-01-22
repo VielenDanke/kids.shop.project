@@ -49,7 +49,7 @@ public class StateMachineProcessingServiceImpl implements StateMachineProcessing
     }
 
     @Override
-    public Cart restoreCartFromStateMachine(String stateMachineID) {
+    public Cart retrieveCartFromStateMachine(String stateMachineID) {
         StateMachine<PurchaseState, PurchaseEvent> restoredStateMachine = stateMachineFactory.getStateMachine();
         try {
             stateMachinePersister

@@ -1,23 +1,120 @@
 package kz.danke.user.service.config.security;
 
+import kz.danke.user.service.config.security.filters.AuthFilter;
+import kz.danke.user.service.config.security.filters.LoggingFilter;
+import kz.danke.user.service.config.security.handlers.*;
 import kz.danke.user.service.config.security.jwt.JwtService;
+import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.JsonObjectMapper;
+import kz.danke.user.service.service.impl.UserServiceImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+
+    @Bean("userDetailsRepositoryReactiveAuthenticationManager")
+    public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(
+            PasswordEncoder passwordEncoder,
+            UserServiceImpl reactiveUserDetailsService
+    ) {
+        UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
+                new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService);
+
+        userDetailsRepositoryReactiveAuthenticationManager.setPasswordEncoder(passwordEncoder);
+        userDetailsRepositoryReactiveAuthenticationManager.setUserDetailsPasswordService(reactiveUserDetailsService);
+
+        return userDetailsRepositoryReactiveAuthenticationManager;
+    }
+
+    @Bean
+    public ReactiveAuthenticationManagerResolver<ServerWebExchange> authenticationManagerResolver(
+            ReactiveAuthenticationManager reactiveAuthenticationManager
+    ) {
+        return serverWebExchange -> Mono.just(reactiveAuthenticationManager);
+    }
+
+    @Bean("userLogoutHandler")
+    public ServerLogoutHandler userLogoutHandler(@Qualifier("userJwtService") JwtService<String> jwtService,
+                                                 JsonObjectMapper jsonObjectMapper,
+                                                 @Value("${auth.token.key}") String accessTokenKey,
+                                                 @Value("${auth.roles.key}") String authRolesKey,
+                                                 @Value("${user.claims.key}") String userClaimsKey) {
+        UserLogoutHandler userLogoutHandler = new UserLogoutHandler(jwtService, jsonObjectMapper);
+
+        userLogoutHandler.setAccessTokenKey(accessTokenKey);
+        userLogoutHandler.setRolesKey(authRolesKey);
+        userLogoutHandler.setUserClaimsKey(userClaimsKey);
+
+        return userLogoutHandler;
+    }
+
+    @Bean("oauth2UserRedirectSuccessHandler")
+    public ServerAuthenticationSuccessHandler oauth2UserRedirectSuccessHandler(
+            @Qualifier("userJwtService") JwtService<String> jwtService,
+            ReactiveUserRepository reactiveUserRepository,
+            JsonObjectMapper jsonObjectMapper,
+            @Value("${auth.token.key}") String accessTokenKey,
+            @Value("${auth.roles.key}") String authRolesKey
+    ) {
+        OAuthUserServerAuthenticationSuccessHandler successHandler = new OAuthUserServerAuthenticationSuccessHandler();
+
+        successHandler.setJwtService(jwtService);
+        successHandler.setReactiveUserRepository(reactiveUserRepository);
+        successHandler.setJsonObjectMapper(jsonObjectMapper);
+        successHandler.setAuthRolesKey(authRolesKey);
+        successHandler.setAuthTokenKey(accessTokenKey);
+
+        return successHandler;
+    }
+
+    @Bean("oauth2UserRedirectFailureHandler")
+    public ServerAuthenticationFailureHandler oauth2UserRedirectFailureHandler(JsonObjectMapper jsonObjectMapper) {
+        return new OAuthUserServerAuthenticationFailureHandler(jsonObjectMapper);
+    }
+
+    @Bean("loggingFilter")
+    public LoggingFilter loggingFilter(
+            @Qualifier("userDetailsRepositoryReactiveAuthenticationManager") UserDetailsRepositoryReactiveAuthenticationManager reactiveAuthenticationManager,
+            @Qualifier("userJwtService") JwtService<String> jwtService,
+            ReactiveUserRepository reactiveUserRepository,
+            JsonObjectMapper jsonObjectMapper,
+            @Value("${auth.token.key}") String accessTokenKey,
+            @Value("${auth.roles.key}") String authRolesKey
+    ) {
+        LoggingFilter loggingFilter = new LoggingFilter(reactiveAuthenticationManager);
+
+        UserServerAuthenticationSuccessHandler authenticationSuccessHandler = new UserServerAuthenticationSuccessHandler(jwtService, accessTokenKey, authRolesKey);
+        UserServerAuthenticationFailureHandler authenticationFailureHandler = new UserServerAuthenticationFailureHandler();
+
+        authenticationSuccessHandler.setReactiveUserRepository(reactiveUserRepository);
+        authenticationSuccessHandler.setJsonObjectMapper(jsonObjectMapper);
+        authenticationFailureHandler.setJsonObjectMapper(jsonObjectMapper);
+
+        loggingFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        loggingFilter.setAuthenticationFailureHandler(authenticationFailureHandler);
+
+        return loggingFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -29,7 +126,8 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity httpSecurity,
-            AuthFilter authFilter
+            AuthFilter authFilter,
+            LoggingFilter loggingFilter
     ) {
         httpSecurity
                 .csrf()
@@ -38,6 +136,7 @@ public class SecurityConfig {
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
                 .pathMatchers(HttpMethod.POST, "/auth/registration").permitAll()
+                .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/reserve").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/process").permitAll()
                 .pathMatchers(HttpMethod.POST, "/cart/reserve/decline").permitAll()
@@ -46,6 +145,7 @@ public class SecurityConfig {
                 .authenticated()
                 .and()
                 .addFilterAt(authFilter, SecurityWebFiltersOrder.HTTP_BASIC)
+                .addFilterAt(loggingFilter, SecurityWebFiltersOrder.FORM_LOGIN)
                 .httpBasic()
                 .disable()
                 .formLogin()

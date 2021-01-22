@@ -3,12 +3,17 @@ package kz.danke.user.service.config.elasticsearch;
 import kz.danke.user.service.config.AppConfigProperties;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
-import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 
@@ -21,8 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 @Configuration
-@EnableReactiveElasticsearchRepositories(basePackages = {"kz.danke.user.kz.danke.user.service.service.kz.danke.user.service.repository"})
-public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfiguration {
+@EnableReactiveElasticsearchRepositories(basePackages = "kz.danke.edge.kz.danke.user.service.service.kz.danke.user.service.repository")
+public class ElasticsearchConfig {
 
     private final AppConfigProperties appConfigProperties;
 
@@ -31,8 +36,26 @@ public class ElasticsearchConfig extends AbstractReactiveElasticsearchConfigurat
         this.appConfigProperties = appConfigProperties;
     }
 
-    @Bean
-    @Override
+    @Bean("reactiveElasticsearchTemplate")
+    public ReactiveElasticsearchOperations reactiveElasticsearchOperations(
+            ReactiveElasticsearchClient reactiveElasticsearchClient,
+            @Qualifier("mappingElasticsearchConverter") ElasticsearchConverter elasticsearchConverter
+    ) {
+        return new ReactiveElasticsearchTemplate(reactiveElasticsearchClient, elasticsearchConverter);
+    }
+
+    @Bean("mappingElasticsearchConverter")
+    public ElasticsearchConverter mappingElasticsearchConverter(
+            @Qualifier("mappingContext") SimpleElasticsearchMappingContext mappingContext) {
+        return new MappingElasticsearchConverter(mappingContext);
+    }
+
+    @Bean("mappingContext")
+    public SimpleElasticsearchMappingContext mappingContext() {
+        return new SimpleElasticsearchMappingContext();
+    }
+
+    @Bean("reactiveElasticsearchClient")
     public ReactiveElasticsearchClient reactiveElasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(appConfigProperties.getElasticsearch().getHostAndPort())
