@@ -7,9 +7,12 @@ import kz.danke.user.service.config.security.SecurityConfig;
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.config.security.jwt.impl.JwtServiceImpl;
 import kz.danke.user.service.config.state.machine.StateMachineConfig;
+import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.StateMachineProcessingService;
 import kz.danke.user.service.service.UserService;
+import kz.danke.user.service.service.impl.UserDetailsPasswordServiceImpl;
+import kz.danke.user.service.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SpringBootWebSecurityConfiguration;
@@ -32,7 +35,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         SecurityConfig.class,
         JwtServiceImpl.class,
         AppConfigProperties.class,
-        JsonObjectMapper.class
+        JsonObjectMapper.class,
+        UserDetailsPasswordServiceImpl.class
 })
 @TestPropertySource("classpath:application-test.properties")
 @WebFluxTest
@@ -53,4 +57,6 @@ public abstract class AbstractRouterLayer {
     protected UserService userService;
     @MockBean
     protected StateMachineProcessingService stateMachineProcessingService;
+    @MockBean
+    protected ReactiveUserRepository reactiveUserRepository;
 }

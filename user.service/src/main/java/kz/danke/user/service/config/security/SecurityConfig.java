@@ -6,7 +6,7 @@ import kz.danke.user.service.config.security.handlers.*;
 import kz.danke.user.service.config.security.jwt.JwtService;
 import kz.danke.user.service.repository.ReactiveUserRepository;
 import kz.danke.user.service.service.JsonObjectMapper;
-import kz.danke.user.service.service.impl.UserServiceImpl;
+import kz.danke.user.service.service.impl.UserDetailsPasswordServiceImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
@@ -35,13 +35,13 @@ public class SecurityConfig {
     @Bean("userDetailsRepositoryReactiveAuthenticationManager")
     public UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager(
             PasswordEncoder passwordEncoder,
-            UserServiceImpl reactiveUserDetailsService
+            UserDetailsPasswordServiceImpl userDetailsPasswordService
     ) {
         UserDetailsRepositoryReactiveAuthenticationManager userDetailsRepositoryReactiveAuthenticationManager =
-                new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService);
+                new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsPasswordService);
 
         userDetailsRepositoryReactiveAuthenticationManager.setPasswordEncoder(passwordEncoder);
-        userDetailsRepositoryReactiveAuthenticationManager.setUserDetailsPasswordService(reactiveUserDetailsService);
+        userDetailsRepositoryReactiveAuthenticationManager.setUserDetailsPasswordService(userDetailsPasswordService);
 
         return userDetailsRepositoryReactiveAuthenticationManager;
     }

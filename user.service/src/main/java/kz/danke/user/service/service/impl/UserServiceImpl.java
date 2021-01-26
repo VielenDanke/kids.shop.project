@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 @Service
-public class UserServiceImpl implements UserService, ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
+public class UserServiceImpl implements UserService {
 
     private final ReactiveUserRepository reactiveUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,20 +44,6 @@ public class UserServiceImpl implements UserService, ReactiveUserDetailsService,
         this.passwordEncoder = passwordEncoder;
         this.webRequestService = webRequestService;
         this.environment = environment;
-    }
-
-    @Override
-    public Mono<UserDetails> findByUsername(String username) {
-        return reactiveUserRepository.findByUsername(username)
-                .map(UserDetailsImpl::new);
-    }
-
-    @Override
-    public Mono<UserDetails> updatePassword(UserDetails userDetails, String newPassword) {
-        return reactiveUserRepository.findByUsername(userDetails.getUsername())
-                .doOnSuccess(user -> user.setPassword(newPassword))
-                .flatMap(reactiveUserRepository::save)
-                .map(UserDetailsImpl::new);
     }
 
     @Override

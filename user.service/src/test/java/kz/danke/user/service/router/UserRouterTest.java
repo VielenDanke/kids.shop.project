@@ -193,9 +193,7 @@ public class UserRouterTest extends AbstractRouterLayer {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)
-                .value(r -> {
-                    Assertions.assertTrue(r.contains(stateID));
-                });
+                .value(r -> Assertions.assertTrue(r.contains(stateID)));
 
         verify(stateMachineProcessingService, times(1)).processReserveDecline(anyString());
     }
@@ -244,9 +242,7 @@ public class UserRouterTest extends AbstractRouterLayer {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)
-                .value(s -> {
-                    Assertions.assertTrue(s.contains(testID));
-                });
+                .value(s -> Assertions.assertTrue(s.contains(testID)));
 
         verify(stateMachineProcessingService, times(1)).processChargeEvent(any(ChargeRequest.class), anyString());
     }
