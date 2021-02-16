@@ -14,5 +14,6 @@
         <module>edge-service</module>
         <module>user.service</module>
         <module>config.server</module>
+	    <module>shipment.service</module>
     </modules>
 </project>

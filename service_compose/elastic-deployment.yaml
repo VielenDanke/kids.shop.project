@@ -19,7 +19,7 @@ spec:
         image: elasticsearch:7.6.2
         resources:
           requests:
-            memory: 4Gi
+            memory: 2Gi
             cpu: '8'
           limits:
             memory: 4Gi

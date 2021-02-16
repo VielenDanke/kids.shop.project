@@ -3,6 +3,7 @@ package kz.danke.user.service.config.state.machine;
 import kz.danke.user.service.config.state.machine.actions.*;
 import kz.danke.user.service.config.state.machine.listener.PurchaseStateMachineEventListener;
 import kz.danke.user.service.config.state.machine.persister.InMemoryStateMachinePersist;
+import kz.danke.user.service.producer.PurchaseEventProducer;
 import kz.danke.user.service.service.JsonObjectMapper;
 import kz.danke.user.service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
 
     private final JsonObjectMapper jsonObjectMapper;
     private final UserService userService;
+    private final PurchaseEventProducer producer;
 
     @Autowired
-    public StateMachineConfig(JsonObjectMapper jsonObjectMapper, UserService userService) {
+    public StateMachineConfig(JsonObjectMapper jsonObjectMapper, UserService userService, PurchaseEventProducer producer) {
         this.jsonObjectMapper = jsonObjectMapper;
         this.userService = userService;
+        this.producer = producer;
     }
 
     @Override
@@ -84,7 +87,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Purcha
 
     @Bean
     public Action<PurchaseState, PurchaseEvent> purchaseAction() {
-        return new PurchaseAction(jsonObjectMapper);
+        return new PurchaseAction(jsonObjectMapper, producer);
     }
 
     @Bean
