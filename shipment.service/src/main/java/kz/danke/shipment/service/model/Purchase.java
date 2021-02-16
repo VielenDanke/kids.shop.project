@@ -1,12 +1,10 @@
 package kz.danke.shipment.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
 
@@ -18,6 +16,9 @@ import javax.persistence.*;
 @AllArgsConstructor
 @DynamicInsert
 @DynamicUpdate
+@Builder
+@EqualsAndHashCode(of = {"businessKey"})
+@ToString
 public class Purchase {
 
     @Id
@@ -35,4 +36,12 @@ public class Purchase {
     private String phoneNumber;
     @Column(name = "email")
     private String email;
+    @NaturalId
+    @Column(name = "business_key")
+    private String businessKey;
+    @Version
+    @Column(name = "version")
+    private short version;
+    @Column(name = "sent")
+    private Boolean sent;
 }
