@@ -35,20 +35,23 @@ public class UserAuthenticationPathFilterConverter implements ServerAuthenticati
     public Mono<Authentication> convert(ServerWebExchange exchange) {
         return Mono.just(exchange.getRequest().getHeaders())
                 .filter(Objects::nonNull)
-                .switchIfEmpty(Mono.empty())
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new TokenNotValidException("Token not found"))))
                 .map(headers -> headers.getFirst(accessTokenKey))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new TokenNotValidException("Token not found"))))
                 .flatMap(jwtService::validateToken)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new TokenNotValidException("Token is not valid"))))
                 .map(jwtService::extractTokenClaims)
-                .map(claims -> claims.get(userClaimsKey, String.class))
-                .map(userClaims -> jsonObjectMapper.deserializeJson(userClaims, User.class))
-                .map(user -> new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
-                        null,
-                        user.getAuthorities()
-                                .stream()
-                                .map(SimpleGrantedAuthority::new)
-                                .collect(Collectors.toList())
-                ));
+                .map(claims -> {
+                    String userClaims = claims.get(userClaimsKey, String.class);
+                    User user = jsonObjectMapper.deserializeJson(userClaims, User.class);
+                    return new UsernamePasswordAuthenticationToken(
+                            user.getUsername(),
+                            null,
+                            user.getAuthorities()
+                                    .stream()
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList())
+                    );
+                });
     }
 }
