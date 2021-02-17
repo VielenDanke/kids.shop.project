@@ -11,4 +11,6 @@ public interface PurchaseService {
     List<Purchase> findAll();
 
     List<Purchase> findAllWithChangeStatus();
+
+    void updateStatusByIds(List<Long> ids);
 }

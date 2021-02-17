@@ -19,6 +19,12 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
+    public void updateStatusByIds(List<Long> ids) {
+        purchaseRepository.updateStatusByIdIn(ids);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public Purchase save(Purchase purchase) {
         purchase.setBusinessKey(UUID.randomUUID().toString());
         return purchaseRepository.save(purchase);
