@@ -1,15 +1,17 @@
 package kz.danke.shipment.service.configuration;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,77 +20,55 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConfig {
 
+    @Value("${kafka.server}")
+    private String kafkaServer;
+
+    @Value("${kafka.group.id}")
+    private String kafkaGroupId;
+
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
-            ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
-            ConsumerFactory<Object, Object> kafkaConsumerFactory
-    ) {
-        final int amountOfThreadForConcurrency = 5;
-
-        ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-
-        configurer.configure(factory, kafkaConsumerFactory);
-
-        factory.setConcurrency(amountOfThreadForConcurrency);
-//        factory.setErrorHandler(((thrownException, data) -> {
-//            log.info("Exception in consumer is {} and the record is {}", thrownException.getMessage(), data);
-//        }));
-//        factory.setRetryTemplate(retryTemplate());
-//        factory.setRecoveryCallback(context -> {
-//            boolean isContains = context.getLastThrowable().toString().contains(RecoverableDataAccessException.class.getSimpleName());
-//
-//            if (isContains) {
-//                String record = "record";
-//
-//                ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer, String>) context.getAttribute(record);
-//
-//                libraryEventService.handleRecovery(consumerRecord);
-//
-//                log.info("Inside the recoverable logic");
-//            } else {
-//                log.info("Inside the non recoverable logic");
-//                throw new RuntimeException(context.getLastThrowable().getMessage());
-//            }
-//            return null;
-//        });
-
-//        ContainerProperties containerProperties = factory.getContainerProperties();
-//
-//        containerProperties.setAckMode(ContainerProperties.AckMode.MANUAL);
-
+    public KafkaListenerContainerFactory<?> batchFactory() {
+        ConcurrentKafkaListenerContainerFactory<Object, Object> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(true);
+        factory.setMessageConverter(new BatchMessagingMessageConverter(converter()));
         return factory;
     }
 
-//    private RetryTemplate retryTemplate() {
-//        RetryTemplate retryTemplate = new RetryTemplate();
-//
-//        retryTemplate.setRetryPolicy(simpleRetryPolicy());
-//        retryTemplate.setBackOffPolicy(getFixedBackOffPolicy());
-//
-//        return retryTemplate;
-//    }
-//
-//    private FixedBackOffPolicy getFixedBackOffPolicy() {
-//        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
-//
-//        fixedBackOffPolicy.setBackOffPeriod(1000);
-//
-//        return fixedBackOffPolicy;
-//    }
-//
-//    private RetryPolicy simpleRetryPolicy() {
-////        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-////
-////        retryPolicy.setMaxAttempts(3);
-//        Map<Class<? extends Throwable>, Boolean> exceptionMap = new HashMap<>();
-//
-//        exceptionMap.put(IllegalArgumentException.class, false);
-//        exceptionMap.put(RecoverableDataAccessException.class, true);
-//
-//        return new SimpleRetryPolicy(
-//                3,
-//                exceptionMap,
-//                true
-//        );
-//    }
+    @Bean
+    public KafkaListenerContainerFactory<?> singleFactory() {
+        ConcurrentKafkaListenerContainerFactory<Object, Object> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(false);
+        factory.setMessageConverter(new StringJsonMessageConverter());
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<Object, Object> consumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+    }
+
+    @Bean
+    public KafkaListenerContainerFactory<?> kafkaListenerContainerFactory() {
+        return new ConcurrentKafkaListenerContainerFactory<>();
+    }
+
+    @Bean
+    public Map<String, Object> consumerConfigs() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroupId);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        return props;
+    }
+
+    @Bean
+    public StringJsonMessageConverter converter() {
+        return new StringJsonMessageConverter();
+    }
 }
